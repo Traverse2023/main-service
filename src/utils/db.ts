@@ -43,6 +43,8 @@ class DB {
 
   async createUser({ firstName, lastName, email, password }) {
     const session = this.localDriver.session({ database: "neo4j" });
+    console.log(this.localDriver.getServerInfo())
+    // console.log("SESSION OPEN", session)
 
     try {
       const writeQuery = `CREATE (u:User { firstName: $firstName,
@@ -62,6 +64,7 @@ class DB {
       console.error(`Something went wrong: ${error}`);
     } finally {
       await session.close();
+      console.log("SESSION CLOSE", session)
     }
   }
 

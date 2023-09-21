@@ -12,6 +12,17 @@
         "resolveJsonModule": true
     },
     "testEnvironment": "jest",
+    "ava": {
+        "files": [
+          "test/**/*.test.ts"
+        ],
+        "extensions": [
+          "ts"
+        ],
+        "require": [
+          "ts-node/register"
+        ]
+    },
     "files": [
         "global.d.ts"
     ],
