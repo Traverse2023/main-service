@@ -23,6 +23,24 @@ class DB {
     });
   }
 
+  async clear() {
+    const session = this.localDriver.session({ database: "neo4j" });
+
+    try {
+      const result = await session.writeTransaction(async (tx) => {
+        // Cypher query to delete all nodes and relationships
+        const query = 'MATCH (n) DETACH DELETE n';
+        return await tx.run(query);
+      });
+
+      console.log('Database cleared successfully.');
+    } catch (error) {
+      console.error('Error clearing the database:', error);
+    } finally {
+      await session.close();
+    }
+  }
+
   async createUser({ firstName, lastName, email, password }) {
     const session = this.localDriver.session({ database: "neo4j" });
 
@@ -258,8 +276,8 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User)
-                                    WHERE (f)-[:FRIENDS]-(:User {email: $user2Email})
+        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User) [1,2,3,4,6]
+                                    WHERE (f)-[:FRIENDS]-(:User {email: $user2Email}) 
                                     RETURN DISTINCT f`;
 
         const readResult = await session.executeRead((tx) =>

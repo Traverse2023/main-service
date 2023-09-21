@@ -41,6 +41,15 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   };
   console.log(createdUser);
   const db = new DB();
+  db.findUser(email).then(value => {
+      console.log(value);
+      res.json(value)
+  }).catch(err => {
+      // console.log(err)
+      res.send(new HttpError(err, 400))
+      // throw new HttpError(err, 400)
+  })
+
   db.createUser(createdUser)
     .then((value) => {
       let token;
@@ -63,7 +72,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     });
 };
 
-const login = (req: Request, res: Response, next: NextFunction) => {
+const login = (req: Request, res, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
