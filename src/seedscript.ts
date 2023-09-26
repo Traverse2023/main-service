@@ -9,6 +9,12 @@ const clear = () => {
     })
 }
 
+const createUniqueUserConstraint = () => {
+    return new Promise((resolve, reject) => {
+        db.createUserUnique().then(response => resolve(response)).catch(err => reject(err))
+    })
+}
+
 const createUsers = async () => {
     try {
         const response = await Promise.all([
@@ -52,6 +58,7 @@ const createUsers = async () => {
 const script = async () => {
     try {
         const clearResponse = await clear()
+        // const userConstraint = await createUniqueUserConstraint()
         console.log("Loading seed data...")
         const createUsersResponse = await createUsers()
         console.log(createUsersResponse)
@@ -60,4 +67,4 @@ const script = async () => {
     }
 }
 
-script().then(response => true).catch(err => console.log(err))
+script().then(response => process.exit()).catch(err => console.log(err))
