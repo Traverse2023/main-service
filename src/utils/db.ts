@@ -41,11 +41,27 @@ class DB {
     }
   }
 
+  async createUserUnique() {
+    const session = this.localDriver.session({ database: "neo4j" });
+    try {
+      const writeQuery = `CREATE CONSTRAINT FOR (u:User) REQUIRE u.email IS UNIQUE`;
+
+      const writeResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery)
+      );
+
+      // writeResult.records.forEach((record) => {
+      //   const createdUser = record.get("u");
+      //   console.info("CREATED USER: ", firstName);
+      // });
+    } catch (error) {
+      console.error(`Something went wrong: ${error}`);
+    } finally {
+      await session.close();
+    }
+  }
   async createUser({ firstName, lastName, email, password }) {
     const session = this.localDriver.session({ database: "neo4j" });
-    console.log(this.localDriver.getServerInfo())
-    // console.log("SESSION OPEN", session)
-
     try {
       const writeQuery = `CREATE (u:User { firstName: $firstName,
                                                  lastName: $lastName,
@@ -64,7 +80,6 @@ class DB {
       console.error(`Something went wrong: ${error}`);
     } finally {
       await session.close();
-      console.log("SESSION CLOSE", session)
     }
   }
 
@@ -86,7 +101,7 @@ class DB {
           console.log(`Found person: ${record.get("user")}`);
           res(record.get("user").properties);
         });
-
+        res({})
       } catch (error) {
         console.error(`Something went wrong: ${error}`);
         rej(error);

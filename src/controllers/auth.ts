@@ -1,11 +1,9 @@
 import express, { Router, Request, Response, NextFunction } from "Express";
 import { HttpError } from "../utils/http-error.js";
-import { validationResult } from "express-validator";
+import { body, validationResult } from "express-validator";
 import DB from "../utils/db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-const mock_users = [];
 
 interface User {
   email: string
@@ -14,9 +12,12 @@ interface User {
   password: string
 }
 
-const register = async (req: Request, res: Response, next: NextFunction) => {
+const register = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
+  body('firstName').notEmpty().isString();
+  body('lastName').notEmpty().isString();
+  body('email').notEmpty().isEmail();
   const errors = validationResult(req);
   // console.log('errors', errors);
 
@@ -39,37 +40,40 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     email,
     password: hashedPassword,
   };
-  console.log(createdUser);
-  const db = new DB();
-  db.findUser(email).then(value => {
-      console.log(value);
-      res.json(value)
-  }).catch(err => {
-      // console.log(err)
-      res.send(new HttpError(err, 400))
-      // throw new HttpError(err, 400)
-  })
+  if (!db) db = new DB()
+  const anyUsers = await db.findUser(email)
+  if (Object.keys(anyUsers).length) res.json(anyUsers)
+  else {
+    db.createUser(createdUser)
+      .then((value) => {
+        let token;
+        try {
+          token = jwt.sign(
+            { email: createdUser.email },
+            "supersecret_dont_share",
+            {
+              expiresIn: "1h",
+            }
+          );
+        } catch (err) {
+          throw new HttpError("jwt failed", err);
+        }
+        res.status(201)
+        res.json({ user: createdUser, token: token });
+      })
+      .catch((err) => {
+        console.error(err);
+        throw new HttpError("User was not correct", 404);
+      });
+  }
+  // db.findUser(email).then((value) => {
+  //     res.json(value)
+  // }).catch(err => {
+  //     // console.log(err)
+  //     res.send(new HttpError(err, 400))
+  //     // throw new HttpError(err, 400)
+  // })
 
-  db.createUser(createdUser)
-    .then((value) => {
-      let token;
-      try {
-        token = jwt.sign(
-          { email: createdUser.email },
-          "supersecret_dont_share",
-          {
-            expiresIn: "1h",
-          }
-        );
-      } catch (err) {
-        throw new HttpError("jwt failed", err);
-      }
-      res.status(201).json({ user: createdUser, token: token });
-    })
-    .catch((err) => {
-      console.error(err);
-      throw new HttpError("User was not correct", 404);
-    });
 };
 
 const login = (req: Request, res, next: NextFunction) => {
