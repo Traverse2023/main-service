@@ -29,7 +29,7 @@ export const findOneSetupExisting = (email: string) => {
               "properties": {
                 "firstName": "Farhan",
                 "lastName": "Mashud",
-                "password": "$2a$12$EGcdGeukqMyHefQFBHljI.VpC2SvYw06ay/LePF5oUqzZBAIbRK.y",
+                "password": "$2a$12$1T9WF48g3RRtgdHrGAeCGOh2OWfx5gEK8kKP/gIsK8/QyykgOe0j6",
                 "email": "mashudf37+test@gmail.com"
               },
               "elementId": "4:e1e5a7ba-afdd-44ef-9983-d6ab64875723:0"

@@ -6,10 +6,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 interface User {
-  email: string
-  firstName: string
-  lastName: string
-  password: string
+  email?: string
+  firstName?: string
+  lastName?: string
+  password?: string
 }
 
 const register = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
@@ -76,55 +76,46 @@ const register = async (req: Request, res: Response, next: NextFunction, db?: DB
 
 };
 
-const login = (req: Request, res, next: NextFunction) => {
+const login = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  console.log('====================================');
-  console.log('here64auth');
-  console.log('====================================');
-  const db = new DB();
+  // console.log('====================================');
+  // console.log('here64auth');
+  // console.log('====================================');
+  if (!db) db = new DB();
 
+  try {
+    const value: User = await db.findUser(email);
 
-  db.findUser(email)
-    .then(async (value: User) => {
-      console.log('value70', value);
-      let isValidPassword = false;
-      try {
-        isValidPassword = await bcrypt.compare(
-          password,
-          value.password
-        );
-      } catch (err) {
-        new HttpError("Could not log in", 404);
-        return next(err);
-      }
+    // console.log('value70', value);
+    
+    const isValidPassword = await bcrypt.compare(password, value.password);
 
-      if (!isValidPassword) {
-        throw new HttpError("Invalid creds", 401);
+    if (!isValidPassword) {
+      throw new HttpError("Invalid creds", 401);
+    }
+
+    let token = jwt.sign(
+      { email: email },
+      "supersecret_dont_share",
+      {
+        expiresIn: "1h",
       }
-      let token;
-      try {
-        token = jwt.sign(
-          { email: email },
-          "supersecret_dont_share",
-          {
-            expiresIn: "1h",
-          }
-        );
-      } catch (err) {
-        throw new HttpError("jwt failed", err);
-      }
-      res.status(200).json({
-        token: token,
-        email: value.email,
-        firstName: value.firstName,
-        lastName: value.lastName
-      });
-    })
-    .catch((err) => {
-      res.json("could not log in");
-    });
-};
+    );
+    console.log("RESSING JSON")
+    const ret = {
+      token: token,
+      email: value.email,
+      firstName: value.firstName,
+      lastName: value.lastName
+    }
+    console.log(ret)
+    res.json(ret);
+  } catch (err) {
+    console.error(err); // Log the error for debugging
+    throw err
+  }
+}
 
 export { register, login };

@@ -31,5 +31,4 @@ export async function findUser(email: string, existing: boolean) {
       await session.close();
     }
   })
-
 }
