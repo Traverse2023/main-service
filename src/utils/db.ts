@@ -5,9 +5,7 @@ dotenv.config()
 const uri = process.env.NEO4J_URI;
 const user = process.env.NEO4J_USER;
 const password = process.env.NEO4J_PASSWORD;
-console.log('====================================');
-console.log(uri, user, password);
-console.log('====================================');
+
 // const localDriver = driver(uri, auth.basic(user, password), {
 //   disableLosslessIntegers: true,
 // });
@@ -23,9 +21,45 @@ class DB {
     });
   }
 
-  async createUser({ firstName, lastName, email, password }) {
+  async clear() {
     const session = this.localDriver.session({ database: "neo4j" });
 
+    try {
+      const result = await session.writeTransaction(async (tx) => {
+        // Cypher query to delete all nodes and relationships
+        const query = 'MATCH (n) DETACH DELETE n';
+        return await tx.run(query);
+      });
+
+      console.log('Database cleared successfully.');
+    } catch (error) {
+      console.error('Error clearing the database:', error);
+    } finally {
+      await session.close();
+    }
+  }
+
+  async createUserUnique() {
+    const session = this.localDriver.session({ database: "neo4j" });
+    try {
+      const writeQuery = `CREATE CONSTRAINT FOR (u:User) REQUIRE u.email IS UNIQUE`;
+
+      const writeResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery)
+      );
+
+      // writeResult.records.forEach((record) => {
+      //   const createdUser = record.get("u");
+      //   console.info("CREATED USER: ", firstName);
+      // });
+    } catch (error) {
+      console.error(`Something went wrong: ${error}`);
+    } finally {
+      await session.close();
+    }
+  }
+  async createUser({ firstName, lastName, email, password }) {
+    const session = this.localDriver.session({ database: "neo4j" });
     try {
       const writeQuery = `CREATE (u:User { firstName: $firstName,
                                                  lastName: $lastName,
@@ -38,7 +72,6 @@ class DB {
 
       writeResult.records.forEach((record) => {
         const createdUser = record.get("u");
-        console.info("CREATED USER: ", firstName);
       });
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
@@ -59,13 +92,10 @@ class DB {
           tx.run(readQuery, { email })
         );
 
-        console.log("readResult", readResult);
-
         readResult.records.forEach((record) => {
-          console.log(`Found person: ${record.get("user")}`);
           res(record.get("user").properties);
         });
-
+        res({})
       } catch (error) {
         console.error(`Something went wrong: ${error}`);
         rej(error);
@@ -162,7 +192,6 @@ class DB {
       try {
         const readQuery = `MATCH p=(s:User)-[:FRIENDS]-(u:User {email: $user1Email})
         RETURN s`;
-                                   console.log('here2');
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { user1Email })
         );
@@ -200,8 +229,6 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
-          console.log("record", record);
-          console.log("recordfields", record._fields);
           results.push({
             email: record._fields[0].properties.email,
             firstName: record._fields[0].properties.firstName,
@@ -258,8 +285,8 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User)
-                                    WHERE (f)-[:FRIENDS]-(:User {email: $user2Email})
+        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User) [1,2,3,4,6]
+                                    WHERE (f)-[:FRIENDS]-(:User {email: $user2Email}) 
                                     RETURN DISTINCT f`;
 
         const readResult = await session.executeRead((tx) =>
