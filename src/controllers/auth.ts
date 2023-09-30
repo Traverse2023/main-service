@@ -22,7 +22,6 @@ const register = async (req: Request, res: Response, next: NextFunction, db?: DB
   // console.log('errors', errors);
 
   if (!errors.isEmpty()) {
-    console.log(errors);
     throw new HttpError("Invalid inputs passed, please check your data.", 422);
   }
   const { firstName, lastName, email, password } = req.body;
@@ -66,13 +65,6 @@ const register = async (req: Request, res: Response, next: NextFunction, db?: DB
         throw new HttpError("User was not correct", 404);
       });
   }
-  // db.findUser(email).then((value) => {
-  //     res.json(value)
-  // }).catch(err => {
-  //     // console.log(err)
-  //     res.send(new HttpError(err, 400))
-  //     // throw new HttpError(err, 400)
-  // })
 
 };
 
@@ -80,16 +72,10 @@ const login = async (req: Request, res: Response, next: NextFunction, db?: DB) =
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  // console.log('====================================');
-  // console.log('here64auth');
-  // console.log('====================================');
   if (!db) db = new DB();
 
   try {
-    const value: User = await db.findUser(email);
-
-    // console.log('value70', value);
-    
+    const value: User = await db.findUser(email);    
     const isValidPassword = await bcrypt.compare(password, value.password);
 
     if (!isValidPassword) {
@@ -103,14 +89,12 @@ const login = async (req: Request, res: Response, next: NextFunction, db?: DB) =
         expiresIn: "1h",
       }
     );
-    console.log("RESSING JSON")
     const ret = {
       token: token,
       email: value.email,
       firstName: value.firstName,
       lastName: value.lastName
     }
-    console.log(ret)
     res.json(ret);
   } catch (err) {
     console.error(err); // Log the error for debugging

@@ -5,9 +5,7 @@ dotenv.config()
 const uri = process.env.NEO4J_URI;
 const user = process.env.NEO4J_USER;
 const password = process.env.NEO4J_PASSWORD;
-console.log('====================================');
-console.log(uri, user, password);
-console.log('====================================');
+
 // const localDriver = driver(uri, auth.basic(user, password), {
 //   disableLosslessIntegers: true,
 // });
@@ -74,7 +72,6 @@ class DB {
 
       writeResult.records.forEach((record) => {
         const createdUser = record.get("u");
-        console.info("CREATED USER: ", firstName);
       });
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
@@ -95,10 +92,7 @@ class DB {
           tx.run(readQuery, { email })
         );
 
-        console.log("readResult", readResult);
-
         readResult.records.forEach((record) => {
-          console.log(`Found person: ${record.get("user")}`);
           res(record.get("user").properties);
         });
         res({})
@@ -198,7 +192,6 @@ class DB {
       try {
         const readQuery = `MATCH p=(s:User)-[:FRIENDS]-(u:User {email: $user1Email})
         RETURN s`;
-                                   console.log('here2');
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { user1Email })
         );
@@ -236,8 +229,6 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
-          console.log("record", record);
-          console.log("recordfields", record._fields);
           results.push({
             email: record._fields[0].properties.email,
             firstName: record._fields[0].properties.firstName,
