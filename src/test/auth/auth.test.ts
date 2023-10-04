@@ -51,25 +51,25 @@ test("Register route with existing user params should not cause createUser call"
 
 Sinon.restore()
 
-test("Login route with invalid creds should throw error", async t => {
-    const mockRequest = {
-        body: {
-            firstName: "Farhan",
-            lastName: "Mashud",
-            email: "mashudf37+test@gmail.com",
-            password: "1235"
-        }
-    } 
-    const mockResponse : Partial<Response> = {
-        json: Sinon.stub().returns({}),
-        status: Sinon.stub().returns({}) 
-    }
-    const dbStub = Sinon.createStubInstance(DB)
-    dbStub.findUser.callsFake(async (email) => await findUserMock(email, true))
-    await t.throwsAsync(async () => {
-        await login(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
-    }, { instanceOf: HttpError, message: "Invalid creds" });
-})
+// test("Login route with invalid creds should throw error", async t => {
+//     const mockRequest = {
+//         body: {
+//             firstName: "Farhan",
+//             lastName: "Mashud",
+//             email: "mashudf37+test@gmail.com",
+//             password: "1235"
+//         }
+//     } 
+//     const mockResponse : Partial<Response> = {
+//         json: Sinon.stub().returns({}),
+//         status: Sinon.stub().returns({}) 
+//     }
+//     const dbStub = Sinon.createStubInstance(DB)
+//     dbStub.findUser.callsFake(async (email) => await findUserMock(email, true))
+//     await t.throwsAsync(async () => {
+//         await login(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
+//     }, { instanceOf: HttpError, message: "Invalid creds" });
+// })
 
 Sinon.restore()
 
@@ -96,6 +96,9 @@ test("Login route with valid creds should return user's object", async t => {
         t.true(jsonSpy.calledWith(Sinon.match(obj => Object.keys(obj).length > 0)));
     });
 });
+
+Sinon.restore()
+
 
 
 

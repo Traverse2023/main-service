@@ -8,45 +8,47 @@ const addFriend = (req: Request, res: Response) => {
   res.json("Hello World");
 };
 
-const sendFriendRequest = (req: Request, res: Response, next: NextFunction) => {
+const sendFriendRequest = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+  console.log("ENTERING SEND REQUEST");
   const { user1Email, user2Email } = req.body;
 
-  const db = new DB();
+  if (!db) db = new DB();
 
-  db.createFriendRequest(user1Email, user2Email)
-    .then((value) => {
-      console.log(value);
-      res.status(200).json(value);
-    })
-    .catch((err) => {
+  try {
+      const value = await db.createFriendRequest(user1Email, user2Email);
+      console.log("VALUE in CONT", value);
+      res.json(value);
+  } catch (err) {
+      console.error(err);
       throw new HttpError(err, 404);
-    });
+  }
 };
 
-const acceptFriendRequest = (
+const acceptFriendRequest = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
+  db?: DB
 ) => {
   const { user1Email, user2Email } = req.body;
 
-  const db = new DB();
+  if (!db) db = new DB();
 console.log('34');
+try {
+  const value = await db.createFriendship(user1Email, user2Email);
+  console.log("VALUE in CONT", value);
+  res.json(value);
+} catch (err) {
+  console.error(err);
+  throw new HttpError(err, 404);
+}
 
-  db.createFriendship(user1Email, user2Email)
-    .then((value) => {
-      console.log(value);
-      res.status(200).json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 404);
-    });
 };
 
-const getFriendRequests = (req: Request, res: Response, next: NextFunction) => {
+const getFriendRequests = (req: Request, res: Response, next: NextFunction, db?: DB) => {
   const { userEmail } = req.params;
 
-  const db = new DB();
+  if (!db) db = new DB();
   db.getFriendRequests(userEmail)
     .then((value) => {
       console.log(value);
@@ -57,9 +59,9 @@ const getFriendRequests = (req: Request, res: Response, next: NextFunction) => {
     });
 };
 
-const getFriends = (req: Request, res: Response, next: NextFunction) => {
+const getFriends = (req: Request, res: Response, next: NextFunction, db?: DB) => {
   const { user1Email } = req.params;
-  const db = new DB();
+  if (!db) db = new DB();
   db.getFriends(user1Email)
     .then((value) => {
       console.log(value);
@@ -70,9 +72,9 @@ const getFriends = (req: Request, res: Response, next: NextFunction) => {
     });
 };
 
-const getMutualFriends = (req: Request, res: Response, next: NextFunction) => {
+const getMutualFriends = (req: Request, res: Response, next: NextFunction, db?: DB) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB();
+  if (!db) db = new DB();
   db.getMutualFriends(user1Email, user2Email)
     .then((value) => {
       console.log(value);
@@ -86,10 +88,11 @@ const getMutualFriends = (req: Request, res: Response, next: NextFunction) => {
 const getFriendshipStatus = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
+  db?: DB
 ) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB();
+  if (!db) db = new DB();
   db.getFriendshipStatus(user1Email, user2Email)
     .then((value) => {
       console.log(value);
@@ -103,10 +106,11 @@ const getFriendshipStatus = (
 const removeFriendRequest = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
+  db?: DB
 ) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB();
+  if (!db) db = new DB();
   db.removeFriendRequest(user1Email, user2Email)
     .then((value) => {
       console.log(value);

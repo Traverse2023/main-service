@@ -1,6 +1,5 @@
 import test from 'ava'
 import { createUser  as createUserMock} from "../../utils/mock-db.js"
-import bcrypt from 'bcrypt'
 
 test("createUser no error thrown", async t => {
 
