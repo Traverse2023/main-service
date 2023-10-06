@@ -238,3 +238,36 @@ RETURN u1.email, type(r), u2.email`
 
 }
 
+export const removeFriendReqSetup = (user1Email: string, user2Email: string) => {
+  const removeQuery = `MATCH (:User {email: $user1Email})-[r]-(:User {email: $user2Email}) DELETE r`
+
+  const removeReqParams = {
+    user1Email,
+    user2Email
+  }
+
+  const removeReqOutput = {
+    records: []
+  }
+
+  const querySet: QuerySpec[] = [
+    {
+      name: 'removeReq',
+      query: removeQuery,
+      params: removeReqParams,
+      output: removeReqOutput,
+    }
+  ]
+
+  const session: Session = mockSessionFromQuerySet(querySet)
+
+  return {
+    removeQuery,
+    removeReqParams,
+    removeReqOutput,
+    querySet,
+    session
+  }
+
+}
+

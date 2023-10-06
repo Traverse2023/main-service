@@ -9,14 +9,12 @@ const addFriend = (req: Request, res: Response) => {
 };
 
 const sendFriendRequest = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
-  console.log("ENTERING SEND REQUEST");
   const { user1Email, user2Email } = req.body;
 
   if (!db) db = new DB();
 
   try {
       const value = await db.createFriendRequest(user1Email, user2Email);
-      console.log("VALUE in CONT", value);
       res.json(value);
   } catch (err) {
       console.error(err);
@@ -33,7 +31,6 @@ const acceptFriendRequest = async (
   const { user1Email, user2Email } = req.body;
 
   if (!db) db = new DB();
-console.log('34');
 try {
   const value = await db.createFriendship(user1Email, user2Email);
   console.log("VALUE in CONT", value);
@@ -103,7 +100,7 @@ const getFriendshipStatus = (
     });
 };
 
-const removeFriendRequest = (
+const removeFriendRequest = async(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -111,14 +108,12 @@ const removeFriendRequest = (
 ) => {
   const { user1Email, user2Email } = req.params;
   if (!db) db = new DB();
-  db.removeFriendRequest(user1Email, user2Email)
-    .then((value) => {
-      console.log(value);
-      res.json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 400);
-    });
+  try {
+    const value = await db.removeFriendRequest(user1Email, user2Email)
+    res.json(value)
+  } catch(error) {
+    throw new HttpError(error, 400)
+  }
 };
 
 export {

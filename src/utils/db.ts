@@ -131,30 +131,24 @@ class DB {
 
   async createFriendship(user1Email, user2Email) {
     const session = this.localDriver.session({ database: "neo4j" });
-    this.removeFriendRequest(user1Email, user2Email).then(() => {
-        return new Promise(async (resolve, reject) => {
-            try {
-              const writeQuery = `MATCH (u1:User {email: $user1Email}),
-                                                (u2:User {email: $user2Email})
-                                          CREATE (u1)-[r:FRIENDS]->(u2)
-                                          RETURN u1.email, type(r), u2.email`;
-      
-              const writeResult = await session.executeWrite((tx) =>
-                tx.run(writeQuery, { user1Email, user2Email })
-              );
-              writeResult.records.forEach((record) => {
-                resolve(`CREATED FRIENDSHIP BTWN: ${user1Email} and ${user2Email}`);
-              });
-            } catch (err) {
-              reject(`Something went wrong: ${err}`);
-            } finally {
-              await session.close();
-            }
-          });
-    }).catch(err => console.error(err)).finally(() => {
-        session.close()
-    })
-    
+    try {
+      const promiseArr = await Promise.all([this.removeFriendRequest(user1Email, user2Email), new Promise(async (resolve, reject) => {
+        try {
+          const writeQuery = `MATCH (u1:User {email: $user1Email}),
+                                (u2:User {email: $user2Email})
+                          CREATE (u1)-[r:FRIENDS]->(u2)
+                          RETURN u1.email, type(r), u2.email`;
+          await session.run(writeQuery, { user1Email, user2Email })
+          resolve(`CREATED FRIENDSHIP BTWN: ${user1Email} and ${user2Email}`);
+        } catch (err) {
+          reject(`Something went wrong: ${err}`);
+        } finally {
+          await session.close();
+        }
+      })])
+      return promiseArr[1]
+  
+  } catch(error) { console.log(error) }
   }
 
   async getFriendRequests(userEmail) {
@@ -325,18 +319,18 @@ class DB {
     console.log(parameters);
 
     const query = `MATCH (:User {email: $user1Email})-[r]-(:User {email: $user2Email}) DELETE r`;
-
-    session
-      .run(query, parameters)
-      .then(() => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await session.run(query, parameters)
         console.log("Relationship deleted successfully");
-      })
-      .catch((error) => {
-        console.error(error);
-      })
-      .finally(() => {
-        session.close();
-      });
+        resolve("Relationship deleted successfully")
+      }
+      catch (error) {
+        console.log(error)
+        reject(error)
+      }
+      session.close()
+    })
   }
 
   async createGroup(groupName, user1Email) {
