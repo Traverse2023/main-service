@@ -12,7 +12,7 @@ interface User {
   password?: string
 }
 
-const register = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+const register = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   body('firstName').notEmpty().isString();
@@ -39,7 +39,8 @@ const register = async (req: Request, res: Response, next: NextFunction, db?: DB
     email,
     password: hashedPassword,
   };
-  if (!db) db = new DB()
+  // if (!db) db = new DB()
+  const db = new DB()
   const anyUsers = await db.findUser(email)
   if (Object.keys(anyUsers).length) res.json(anyUsers)
   else {
