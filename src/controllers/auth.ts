@@ -1,4 +1,4 @@
-import express, { Router, Request, Response, NextFunction } from "Express";
+import express, { Router, Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import { body, validationResult } from "express-validator";
 import DB from "../utils/db.js";
@@ -15,6 +15,7 @@ interface User {
 const register = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
+  console.log("INSIDE REGISTERRRR")
   body('firstName').notEmpty().isString();
   body('lastName').notEmpty().isString();
   body('email').notEmpty().isEmail();
@@ -73,11 +74,12 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  const db = new DB()
-  console.log("INSIDE LOGIN")
+  console.log(`Email is ${email}, password is ${password}`)
+  const db = new DB();
 
   try {
     const value: User = await db.findUser(email);    
+    console.log(value)
     const isValidPassword = await bcrypt.compare(password, value.password);
 
     if (!isValidPassword) {
