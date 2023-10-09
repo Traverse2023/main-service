@@ -1,7 +1,7 @@
 import test from 'ava'
 import Sinon from 'sinon'
 import { Request, Response } from 'express'
-import { sendFriendRequest, acceptFriendRequest, removeFriendRequest } from '../../controllers/friends.js'
+import { sendFriendRequest, acceptFriendRequest, removeFriendRequest } from '../../mock-controllers/friends.js'
 import { createFriendRequest as createFriendReqMock } from '../../utils/mock-db.js'
 import { createFriendship as createFriendshipMock } from '../../utils/mock-db.js'
 import { removeFriendRequest as removeReqMock } from '../../utils/mock-db.js'
@@ -79,4 +79,6 @@ test("removeFriendRequest controller with two provided emails should remove the 
     t.true(dbStub.removeFriendRequest.called) 
     t.true(jsonSpy.calledWith(Sinon.match(str => str === `Relationship deleted successfully`)))
 })
+
+// test("getFriendRequests with no present relationships in db should return an empty array")
 

@@ -1,6 +1,6 @@
 import test from "ava";
 import { Request, Response } from 'express';
-import { register, login } from '../../controllers/auth.js';
+import { register, login } from '../../mock-controllers/auth.js';
 import Sinon from 'sinon';
 import DB from '../../utils/db.js';
 import { findUser as findUserMock, createUser as createUserMock } from '../../utils/mock-db.js';

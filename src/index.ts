@@ -15,6 +15,8 @@ const app: Express = express()
 app.use(express.json())
 
 app.use((req, res, next) => {
+  console.log("HEADERS SET")
+
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -22,7 +24,6 @@ app.use((req, res, next) => {
   )
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
-
   next()
 })
 
@@ -32,6 +33,9 @@ app.use("/api/search", searchRoutes)
 app.use("/api/friends", friendRoutes)
 app.use("/api/chats", chatRoutes)
 app.use('/doc', serve, setup(swaggerFile))
+app.get("/Z", (req, res) => {
+  res.json("HELLO")
+})
 
 
 // app.use((req, res, next) => {
@@ -47,6 +51,6 @@ app.use('/doc', serve, setup(swaggerFile))
     res.json({message: error.message || 'An unknown error occurred!'});
   });
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server on ${process.env.PORT}`);
+app.listen(8001, () => {
+    console.log(`Server on 8001`);
 })

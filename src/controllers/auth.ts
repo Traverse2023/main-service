@@ -1,4 +1,4 @@
-import express, { Router, Request, Response, NextFunction } from "Express";
+import express, { Router, Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import { body, validationResult } from "express-validator";
 import DB from "../utils/db.js";
@@ -12,9 +12,10 @@ interface User {
   password?: string
 }
 
-const register = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+const register = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
+  console.log("INSIDE REGISTERRRR")
   body('firstName').notEmpty().isString();
   body('lastName').notEmpty().isString();
   body('email').notEmpty().isEmail();
@@ -39,7 +40,8 @@ const register = async (req: Request, res: Response, next: NextFunction, db?: DB
     email,
     password: hashedPassword,
   };
-  if (!db) db = new DB()
+  // if (!db) db = new DB()
+  const db = new DB()
   const anyUsers = await db.findUser(email)
   if (Object.keys(anyUsers).length) res.json(anyUsers)
   else {
