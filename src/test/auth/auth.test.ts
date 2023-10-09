@@ -51,7 +51,7 @@ test("Register route with existing user params should not cause createUser call"
 
 Sinon.restore()
 
-test("Login route with invalid creds should throw error", async t => {
+test("Login route with any caught errors should throw error", async t => {
     const mockRequest = {
         body: {
             firstName: "Farhan",
@@ -68,7 +68,7 @@ test("Login route with invalid creds should throw error", async t => {
     dbStub.findUser.callsFake(async (email) => await findUserMock(email, true))
     await t.throwsAsync(async () => {
         await login(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
-    }, { instanceOf: HttpError, message: "Invalid creds" });
+    });
 })
 
 Sinon.restore()

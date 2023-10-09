@@ -70,14 +70,16 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
 };
 
-const login = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+const login = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  if (!db) db = new DB();
+  console.log(`Email is ${email}, password is ${password}`)
+  const db = new DB();
 
   try {
     const value: User = await db.findUser(email);    
+    console.log(value)
     const isValidPassword = await bcrypt.compare(password, value.password);
 
     if (!isValidPassword) {
