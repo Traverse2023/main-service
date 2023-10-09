@@ -69,11 +69,12 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
 };
 
-const login = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+const login = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  if (!db) db = new DB();
+  const db = new DB()
+  console.log("INSIDE LOGIN")
 
   try {
     const value: User = await db.findUser(email);    
