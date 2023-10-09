@@ -33,7 +33,6 @@ const acceptFriendRequest = async (
   if (!db) db = new DB();
 try {
   const value = await db.createFriendship(user1Email, user2Email);
-  console.log("VALUE in CONT", value);
   res.json(value);
 } catch (err) {
   console.error(err);
@@ -42,18 +41,16 @@ try {
 
 };
 
-const getFriendRequests = (req: Request, res: Response, next: NextFunction, db?: DB) => {
+const getFriendRequests = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
   const { userEmail } = req.params;
 
   if (!db) db = new DB();
-  db.getFriendRequests(userEmail)
-    .then((value) => {
-      console.log(value);
-      res.json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 400);
-    });
+  try {
+    const requests = await db.getFriendRequests(userEmail)
+    res.json(requests)
+  }
+  catch(error) { throw new HttpError(error, 401) }
+
 };
 
 const getFriends = (req: Request, res: Response, next: NextFunction, db?: DB) => {

@@ -98,7 +98,6 @@ export const register = async (req: Request, res: Response, next: NextFunction, 
       }
       res.json(ret);
     } catch (err) {
-      console.error(err); // Log the error for debugging
       throw err
     }
   }

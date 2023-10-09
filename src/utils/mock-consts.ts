@@ -271,3 +271,89 @@ export const removeFriendReqSetup = (user1Email: string, user2Email: string) => 
 
 }
 
+export const getFriendReqSetup = (userEmail: string, exists: boolean) => {
+  const readQuery = `MATCH p=(s:User)-[:FRIEND_REQUEST]->(u:User {email: $userEmail})
+  RETURN s`
+
+  const getReqParams = {
+    userEmail
+  }
+
+  const getReqOutput = {
+    records: exists ? [
+      {
+        "keys": [
+          "s"
+        ],
+        "length": 1,
+        "_fields": [
+          {
+            "identity": {
+              "low": 5,
+              "high": 0
+            },
+            "labels": [
+              "User"
+            ],
+            "properties": {
+              "firstName": "Farhan",
+              "lastName": "Mashud",
+              "password": "test1234",
+              "email": "mashudf37@gmail.com"
+            },
+            "elementId": "4:7534815a-8537-4ca0-b910-f39a0dc829fe:5"
+          }
+        ],
+        "_fieldLookup": {
+          "s": 0
+        }
+      },
+      {
+        "keys": [
+          "s"
+        ],
+        "length": 1,
+        "_fields": [
+          {
+            "identity": {
+              "low": 5,
+              "high": 0
+            },
+            "labels": [
+              "User"
+            ],
+            "properties": {
+              "firstName": "Farhan",
+              "lastName": "Mashud",
+              "password": "test1234",
+              "email": "mashudf37@gmail.com"
+            },
+            "elementId": "4:7534815a-8537-4ca0-b910-f39a0dc829fe:5"
+          }
+        ],
+        "_fieldLookup": {
+          "s": 0
+        }
+      }
+    ] : []
+  }
+
+  const querySet: QuerySpec[] = [
+    {
+      name: 'getReq',
+      query: readQuery,
+      params: getReqParams,
+      output: getReqOutput,
+    }
+  ]
+
+  const session: Session = mockSessionFromQuerySet(querySet)
+
+  return {
+    readQuery,
+    getReqParams,
+    getReqOutput,
+    querySet,
+    session
+  }
+}

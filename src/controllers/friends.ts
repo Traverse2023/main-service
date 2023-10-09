@@ -40,18 +40,15 @@ const acceptFriendRequest = async (
 
 };
 
-const getFriendRequests = (req: Request, res: Response, next: NextFunction) => {
+const getFriendRequests = async (req: Request, res: Response, next: NextFunction) => {
   const { userEmail } = req.params;
 
-  const db = new DB()
-  db.getFriendRequests(userEmail)
-    .then((value) => {
-      console.log(value);
-      res.json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 400);
-    });
+  const db = new DB();
+  try {
+    const requests = await db.getFriendRequests(userEmail)
+    res.json(requests)
+  }
+  catch(error) { throw new HttpError(error, 401) }
 };
 
 const getFriends = (req: Request, res: Response, next: NextFunction) => {

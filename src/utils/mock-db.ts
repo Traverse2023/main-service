@@ -1,6 +1,6 @@
-import { rejects } from "assert";
 import { createSetup, findOneSetupExisting, findOneSetupNonExisting,
-createFriendReqSetup, makeFriendSetup, removeFriendReqSetup } from "./mock-consts.js";
+createFriendReqSetup, makeFriendSetup, removeFriendReqSetup,
+getFriendReqSetup } from "./mock-consts.js";
 
 export async function createUser({ firstName, lastName, email, password }) {
   try {
@@ -75,11 +75,9 @@ export async function removeFriendRequest(user1Email, user2Email) {
     user2Email,
   };
 
-  console.log(parameters);
 
   try {
     await session.run(removeQuery, parameters)
-    console.log("Relationship deleted successfully");
     resolve("Relationship deleted successfully")
 
   } catch (error) {
@@ -87,4 +85,19 @@ export async function removeFriendRequest(user1Email, user2Email) {
   }
   session.close()
   })
+}
+
+export async function getFriendRequests(userEmail : string, exists : boolean) {
+  const { readQuery, session} = getFriendReqSetup(userEmail, exists)
+  return new Promise(async (resolve, reject) => {
+    try {
+      const readResult = await session.run(readQuery, { userEmail })
+      const results = readResult.records.map(record => record["_fields"][0].properties)
+      resolve(results);
+    } catch (err) {
+      reject(err);
+    } finally {
+      await session.close();
+    }
+  });
 }

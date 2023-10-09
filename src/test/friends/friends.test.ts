@@ -1,10 +1,12 @@
 import test from 'ava'
 import Sinon from 'sinon'
 import { Request, Response } from 'express'
-import { sendFriendRequest, acceptFriendRequest, removeFriendRequest } from '../../mock-controllers/friends.js'
+import { sendFriendRequest, acceptFriendRequest, removeFriendRequest,
+getFriendRequests } from '../../mock-controllers/friends.js'
 import { createFriendRequest as createFriendReqMock } from '../../utils/mock-db.js'
 import { createFriendship as createFriendshipMock } from '../../utils/mock-db.js'
 import { removeFriendRequest as removeReqMock } from '../../utils/mock-db.js'
+import { getFriendRequests as getFriendReqMock } from '../../utils/mock-db.js'
 import DB from '../../utils/db.js'
 
 test("sendFriendRequest controller with two provided emails leads to successful request creation", async t => {
@@ -80,5 +82,45 @@ test("removeFriendRequest controller with two provided emails should remove the 
     t.true(jsonSpy.calledWith(Sinon.match(str => str === `Relationship deleted successfully`)))
 })
 
-// test("getFriendRequests with no present relationships in db should return an empty array")
+Sinon.restore()
+
+test("getFriendRequests with present relationships in db should return a non-empty array", async t => {
+    const mockRequest : Partial<Request> = {
+        params: {
+            userEmail: "isfaroshir@gmail.com"
+        },
+        body: {}
+    } 
+    const jsonSpy = Sinon.spy();
+    const statusSpy = Sinon.spy()
+    const mockResponse : Partial<Response> = {
+        json: jsonSpy,
+        status: statusSpy
+    }    
+    const dbStub = Sinon.createStubInstance(DB)
+    dbStub.getFriendRequests.callsFake(async (userEmail) => await getFriendReqMock(userEmail, true))
+    await getFriendRequests(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
+    t.true(dbStub.getFriendRequests.called) 
+    t.true(jsonSpy.calledWith(Sinon.match(arr => arr.length)))
+})
+
+test("getFriendRequests with no present relationships to user should return an empty array", async t => {
+    const mockRequest : Partial<Request> = {
+        params: {
+            userEmail: "isfaroshir@gmail.com"
+        },
+        body: {}
+    } 
+    const jsonSpy = Sinon.spy();
+    const statusSpy = Sinon.spy()
+    const mockResponse : Partial<Response> = {
+        json: jsonSpy,
+        status: statusSpy
+    }    
+    const dbStub = Sinon.createStubInstance(DB)
+    dbStub.getFriendRequests.callsFake(async (userEmail) => await getFriendReqMock(userEmail, false))
+    await getFriendRequests(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
+    t.true(dbStub.getFriendRequests.called) 
+    t.true(jsonSpy.calledWith(Sinon.match(arr => !arr.length)))    
+})
 
