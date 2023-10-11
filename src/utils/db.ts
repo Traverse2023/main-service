@@ -1,4 +1,4 @@
-import { driver, auth } from "neo4j-driver";
+import { driver, auth, Session } from "neo4j-driver";
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -22,7 +22,7 @@ class DB {
   }
 
   async clear() {
-    const session = this.localDriver.session({ database: "neo4j" });
+    const session : Session = this.localDriver.session({ database: "neo4j" });
 
     try {
       const result = await session.writeTransaction(async (tx) => {
@@ -40,7 +40,7 @@ class DB {
   }
 
   async createUserUnique() {
-    const session = this.localDriver.session({ database: "neo4j" });
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
       const writeQuery = `CREATE CONSTRAINT FOR (u:User) REQUIRE u.email IS UNIQUE`;
 
@@ -59,7 +59,7 @@ class DB {
     }
   }
   async createUser({ firstName, lastName, email, password }) {
-    const session = this.localDriver.session({ database: "neo4j" });
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
       const writeQuery = `CREATE (u:User { firstName: $firstName,
                                                  lastName: $lastName,
@@ -80,8 +80,8 @@ class DB {
     }
   }
 
-  async findUser(email) {
-    const session = this.localDriver.session({ database: "neo4j" });
+  async findUser(email : string) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     return new Promise(async (res, rej) => {
       try {
         const readQuery = `MATCH (u:User)
@@ -105,8 +105,8 @@ class DB {
     });
   }
 
-  async createFriendRequest(user1Email, user2Email) {
-    const session = this.localDriver.session({ database: "neo4j" });
+  async createFriendRequest(user1Email : string, user2Email : string) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
 
     return new Promise(async (resolve, reject) => {
       try {
@@ -129,8 +129,8 @@ class DB {
     });
   }
 
-  async createFriendship(user1Email, user2Email) {
-    const session = this.localDriver.session({ database: "neo4j" });
+  async createFriendship(user1Email : string, user2Email : string) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
       const promiseArr = await Promise.all([this.removeFriendRequest(user1Email, user2Email), new Promise(async (resolve, reject) => {
         try {
@@ -151,8 +151,8 @@ class DB {
   } catch(error) { console.log(error) }
   }
 
-  async getFriendRequests(userEmail) {
-    const session = this.localDriver.session({ database: "neo4j" });
+  async getFriendRequests(userEmail : string) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
@@ -162,14 +162,7 @@ class DB {
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { userEmail })
         );
-
-        readResult.records.forEach((record) => {
-          results.push({
-            email: record._fields[0].properties.email,
-            firstName: record._fields[0].properties.firstName,
-            lastName: record._fields[0].properties.lastName,
-          });
-        });
+        results = readResult.records.map(record => record["_fields"][0].properties)
       } catch (err) {
         reject(err);
       } finally {
@@ -179,9 +172,8 @@ class DB {
     });
   }
 
-  async getFriends(user1Email) {
-    const session = this.localDriver.session({ database: "neo4j" });
-    let results = [];
+  async getFriends(user1Email : string) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     return new Promise(async (resolve, reject) => {
       try {
         const readQuery = `MATCH p=(s:User)-[:FRIENDS]-(u:User {email: $user1Email})
@@ -200,7 +192,7 @@ class DB {
   }
 
   async searchUsers(searcher, searched) {
-    const session = this.localDriver.session({ database: "neo4j" });
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
@@ -213,16 +205,7 @@ class DB {
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { searched, searcher })
         );
-
-        readResult.records.forEach((record) => {
-          results.push({
-            email: record._fields[0].properties.email,
-            firstName: record._fields[0].properties.firstName,
-            lastName: record._fields[0].properties.lastName,
-            isFriend: record._fields[1],
-            sentFriendRequest: record._fields[2],
-          });
-        });
+        results = readResult.records.map(record => record["_fields"][0].properties)
       } catch (err) {
         reject(err);
       } finally {
@@ -267,7 +250,7 @@ class DB {
   }
 
   async getMutualFriends(user1Email, user2Email) {
-    const session = this.localDriver.session({ database: "neo4j" });
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
@@ -278,24 +261,12 @@ class DB {
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { user1Email, user2Email })
         );
-
-        readResult.records.forEach((record) => {
-          console.log("record", record);
-          console.log("recordfields", record._fields);
-          results.push({
-            email: record._fields[0].properties.email,
-            firstName: record._fields[0].properties.firstName,
-            lastName: record._fields[0].properties.lastName,
-          });
-        });
+        await session.close()
+        resolve(readResult.records.map(record => record["_fields"][0].properties))
       } catch (err) {
+        await session.close()
         reject(err);
-      } finally {
-        await session.close();
-        // console.log("178", results);
-
-        resolve(results);
-      }
+      } 
     });
   }
 
