@@ -53,31 +53,23 @@ const getFriendRequests = async (req: Request, res: Response, next: NextFunction
 
 };
 
-const getFriends = (req: Request, res: Response, next: NextFunction, db?: DB) => {
-  const { user1Email } = req.params;
-  if (!db) db = new DB();
-  db.getFriends(user1Email)
-    .then((value) => {
-      console.log(value);
-      res.json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 400);
-    });
-};
+const getFriends = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+    const { user1Email } = req.params;
+    if (!db) db = new DB();
+    try {
+      const friends = await db.getFriends(user1Email)
+      res.json(friends)
+    } catch(error) { throw new HttpError(error, 400) }
+  };
 
-const getMutualFriends = (req: Request, res: Response, next: NextFunction, db?: DB) => {
-  const { user1Email, user2Email } = req.params;
-  if (!db) db = new DB();
-  db.getMutualFriends(user1Email, user2Email)
-    .then((value) => {
-      console.log(value);
-      res.json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 400);
-    });
-};
+  const getMutualFriends = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+    const { user1Email, user2Email } = req.params;
+    if (!db) db = new DB();
+    try {
+      const mutualFriends = await db.getMutualFriends(user1Email, user2Email)
+      res.json(mutualFriends)
+    } catch(error) { throw new HttpError(error, 400) }
+  };
 
 const getFriendshipStatus = (
   req: Request,

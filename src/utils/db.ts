@@ -189,20 +189,12 @@ class DB {
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { user1Email })
         );
-        
-        readResult.records.forEach((record) => {
-          results.push({
-            email: record._fields[0].properties.email,
-            firstName: record._fields[0].properties.firstName,
-            lastName: record._fields[0].properties.lastName,
-          });
-        });
-      } catch (err) {
-        reject(err);
-      } finally {
         await session.close();
-
-        resolve(results);
+        resolve(readResult.records.map(record => record["_fields"][0].properties))
+        
+      } catch (err) {
+        await session.close();
+        reject(err);
       }
     });
   }

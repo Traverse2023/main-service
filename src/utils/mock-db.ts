@@ -1,6 +1,6 @@
 import { createSetup, findOneSetupExisting, findOneSetupNonExisting,
 createFriendReqSetup, makeFriendSetup, removeFriendReqSetup,
-getFriendReqSetup } from "./mock-consts.js";
+getFriendReqSetup, getFriendsSetup, getMutFriendsSetup } from "./mock-consts.js";
 
 export async function createUser({ firstName, lastName, email, password }) {
   try {
@@ -67,7 +67,7 @@ export async function createFriendship(user1Email : string, user2Email : string)
 } catch(error) { console.log(error) }
 }
 
-export async function removeFriendRequest(user1Email, user2Email) {
+export async function removeFriendRequest(user1Email : string, user2Email : string) {
   const { removeQuery, session } = removeFriendReqSetup(user1Email, user2Email)
   return new Promise(async (resolve) => {
   const parameters = {
@@ -99,5 +99,34 @@ export async function getFriendRequests(userEmail : string, exists : boolean) {
     } finally {
       await session.close();
     }
+  });
+}
+
+export async function getFriends(user1Email : string, exists : boolean) {
+  const {readQuery, session} = getFriendsSetup(user1Email, exists);
+  return new Promise(async (resolve, reject) => {
+    try {
+      const readResult = await session.run(readQuery, {user1Email})
+      await session.close();
+      resolve(readResult.records.map(record => record["_fields"][0].properties))
+      
+    } catch (err) {
+      await session.close();
+      reject(err);
+    }
+  });
+}
+
+export async function getMutualFriends(user1Email : string, user2Email : string, exists : boolean) {
+  const { readQuery, session } = getMutFriendsSetup(user1Email, user2Email, exists)
+  return new Promise(async (resolve, reject) => {
+    try {
+      const readResult = await session.run(readQuery, { user1Email, user2Email })
+      await session.close()
+      resolve(readResult.records.map(record => record["_fields"][0].properties))
+    } catch (err) {
+      await session.close()
+      reject(err);
+    } 
   });
 }
