@@ -30,10 +30,11 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   let hashedPassword;
   try {
     hashedPassword = await bcrypt.hash(password, 12);
+    console.log("hashpassword", hashedPassword)
   } catch (err) {
     throw new HttpError(`Password hashing failed: ${err}`, 404);
   }
-
+  console.log("hashpassword2", hashedPassword)
   const createdUser = {
     firstName,
     lastName,
@@ -71,6 +72,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("here74")
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
@@ -78,28 +80,31 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   const db = new DB();
 
   try {
-    const value: User = await db.findUser(email);    
-    console.log(value)
-    const isValidPassword = await bcrypt.compare(password, value.password);
+    const value: User = await db.findUser(email);
+    if (!Object.keys(value).length) res.status(400).json({msg: "User does not exist."})
+    else {
+      console.log(value)
+      const isValidPassword = await bcrypt.compare(password, value.password);
 
-    if (!isValidPassword) {
-      throw new HttpError("Invalid creds", 401);
-    }
-
-    let token = jwt.sign(
-      { email: email },
-      "supersecret_dont_share",
-      {
-        expiresIn: "1h",
+      if (!isValidPassword) {
+        res.status(400).json({msg: "Incorrect Password."})
+      } else {
+        let token = jwt.sign(
+            { email: email },
+            "supersecret_dont_share",
+            {
+              expiresIn: "1h",
+            }
+        );
+        const ret = {
+          token: token,
+          email: value.email,
+          firstName: value.firstName,
+          lastName: value.lastName
+        }
+        res.json(ret);
       }
-    );
-    const ret = {
-      token: token,
-      email: value.email,
-      firstName: value.firstName,
-      lastName: value.lastName
     }
-    res.json(ret);
   } catch (err) {
     console.error(err); // Log the error for debugging
     throw err
