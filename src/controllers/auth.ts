@@ -42,7 +42,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   // if (!db) db = new DB()
   const db = new DB()
   const anyUsers = await db.findUser(email)
-  if (Object.keys(anyUsers).length) res.json(anyUsers)
+  if (Object.keys(anyUsers).length) res.status(400).json({msg: "Email already exists."})
   else {
     db.createUser(createdUser)
       .then((value) => {
@@ -69,16 +69,17 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
 };
 
-const login = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
+const login = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
+  console.log("here")
   const { email, password } = req.body;
-  if (!db) db = new DB();
+  const db = new DB();
 
   try {
     const value: User = await db.findUser(email);    
     const isValidPassword = await bcrypt.compare(password, value.password);
-
+    console.log(value)
     if (!isValidPassword) {
       throw new HttpError("Invalid creds", 401);
     }
