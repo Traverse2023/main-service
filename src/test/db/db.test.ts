@@ -1,6 +1,7 @@
 import test from 'ava'
 import { createUser  as createUserMock} from "../../utils/mock-db.js"
 
+
 test("createUser no error thrown", async t => {
 
     const createUserParams = {
