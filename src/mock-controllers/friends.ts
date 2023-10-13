@@ -71,23 +71,19 @@ const getFriends = async (req: Request, res: Response, next: NextFunction, db?: 
     } catch(error) { throw new HttpError(error, 400) }
   };
 
-const getFriendshipStatus = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-  db?: DB
-) => {
-  const { user1Email, user2Email } = req.params;
-  if (!db) db = new DB();
-  db.getFriendshipStatus(user1Email, user2Email)
-    .then((value) => {
-      console.log(value);
-      res.json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 400);
-    });
-};
+  const getFriendshipStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    db?: DB
+    ) => {
+    const { user1Email, user2Email } = req.params;
+    if (!db) db = new DB();
+    try {
+      const friendshipStatus = await db.getFriendshipStatus(user1Email, user2Email)
+      res.json(friendshipStatus)
+    } catch(error) { throw new HttpError(error, 400) }
+  };
 
 const removeFriendRequest = async(
   req: Request,

@@ -210,15 +210,13 @@ class DB {
         reject(err);
       } finally {
         await session.close();
-        // console.log("178", results);
-
         resolve(results);
       }
     });
   }
 
   async getFriendshipStatus(user1Email, user2Email) {
-    const session = this.localDriver.session({ database: "neo4j" });
+    const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = {};
     return new Promise(async (resolve, reject) => {
       try {
@@ -231,11 +229,11 @@ class DB {
 
         readResult.records.forEach((record) => {
           console.log("record", record);
-          console.log("recordfields", record._fields);
+          console.log("recordfields", record["_fields"]);
 
           results = {
-            friendshipStatus: record._fields[0],
-            initiatedUser: record._fields[1].properties.email,
+            friendshipStatus: record["_fields"][0],
+            initiatedUser: record["_fields"][1].properties.email,
           };
         });
       } catch (err) {

@@ -2,10 +2,11 @@ import test from 'ava'
 import Sinon from 'sinon'
 import { Request, Response } from 'express'
 import { sendFriendRequest, acceptFriendRequest, removeFriendRequest,
-getFriendRequests, getFriends, getMutualFriends } from '../../mock-controllers/friends.js'
+    getFriendRequests, getFriends, getMutualFriends, getFriendshipStatus } from '../../mock-controllers/friends.js'
 import { createFriendRequest as createFriendReqMock, createFriendship as createFriendshipMock,
-removeFriendRequest as removeReqMock, getFriendRequests as getFriendReqMock,
-getFriends as getFriendsMock, getMutualFriends as getMutFriendsMock } from '../../utils/mock-db.js'
+    removeFriendRequest as removeReqMock, getFriendRequests as getFriendReqMock,
+    getFriends as getFriendsMock, getMutualFriends as getMutFriendsMock,
+    getFriendshipStatus as getFriendStatusMock } from '../../utils/mock-db.js'
 import DB from '../../utils/db.js'
 
 test("sendFriendRequest controller with two provided emails leads to successful request creation", async t => {
@@ -205,5 +206,53 @@ test("getMutualFriends controller with no present friends should return empty ar
     await getMutualFriends(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
     t.true(dbStub.getMutualFriends.called) 
     t.true(jsonSpy.calledWith(Sinon.match(arr => !arr.length)))    
+})
+
+test("getFriendshipStatus controller with present friendship should return an exists status", async t => {
+    const mockRequest : Partial<Request> = {
+        params: {
+            user1Email: "isfaroshir@gmail.com",
+            user2Email: "mashudf37+test@gmail.com"
+        },
+        body: {}
+    } 
+    const jsonSpy = Sinon.spy();
+    const statusSpy = Sinon.spy()
+    const mockResponse : Partial<Response> = {
+        json: jsonSpy,
+        status: statusSpy
+    }    
+    const dbStub = Sinon.createStubInstance(DB)
+    dbStub.getFriendshipStatus.callsFake(async (user1Email, user2Email) => await getFriendStatusMock(user1Email, user2Email, true))
+    await getFriendshipStatus(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
+    t.true(dbStub.getFriendshipStatus.called) 
+    t.true(jsonSpy.calledWith(Sinon.match(obj => {
+        const keys = Object.keys(obj)
+        return keys.length && obj.friendshipStatus === "FRIENDS"
+    } )))    
+})
+
+test("getFriendshipStatus controller with no present friendship should return empty object", async t => {
+    const mockRequest : Partial<Request> = {
+        params: {
+            user1Email: "isfaroshir@gmail.com",
+            user2Email: "mashudf37+test@gmail.com"
+        },
+        body: {}
+    } 
+    const jsonSpy = Sinon.spy();
+    const statusSpy = Sinon.spy()
+    const mockResponse : Partial<Response> = {
+        json: jsonSpy,
+        status: statusSpy
+    }    
+    const dbStub = Sinon.createStubInstance(DB)
+    dbStub.getFriendshipStatus.callsFake(async (user1Email, user2Email) => await getFriendStatusMock(user1Email, user2Email, false))
+    await getFriendshipStatus(mockRequest as Request, mockResponse as Response, Sinon.mock(), dbStub)
+    t.true(dbStub.getFriendshipStatus.called) 
+    t.true(jsonSpy.calledWith(Sinon.match(obj => {
+        const keys = Object.keys(obj)
+        return !keys.length
+    } )))    
 })
 

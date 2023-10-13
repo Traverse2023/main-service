@@ -533,3 +533,67 @@ export const getMutFriendsSetup = (user1Email: string, user2Email : string, exis
     session
   }
 }
+
+export const getFriendStatusSetup = (user1Email: string, user2Email : string, exists: boolean) => {
+  const readQuery = `MATCH (:User{email : $user1Email})-[r]-(:User{email : $user2Email})
+  RETURN type(r) as type, startNode(r)`
+
+  const getFriendStatusParams = {
+    user1Email,
+    user2Email
+  }
+
+  const getFriendStatusOutput = {
+    records: exists ? [
+      {
+        "keys": [
+          "type",
+          "startNode(r)"
+        ],
+        "length": 2,
+        "_fields": [
+          "FRIENDS",
+          {
+            "identity": {
+              "low": 12,
+              "high": 0
+            },
+            "labels": [
+              "User"
+            ],
+            "properties": {
+              "firstName": "Farhan",
+              "lastName": "Mashud",
+              "password": "$2a$12$uqg/qzsdga0Q9GSeYmm0FuO5awGtRmkqd5.KpK82iyfOtZL.rg62C",
+              "email": "mashudf37@gmail.com"
+            },
+            "elementId": "4:6c7cbb3d-dab6-42b5-ac31-d5cbcbc877ef:12"
+          }
+        ],
+        "_fieldLookup": {
+          "type": 0,
+          "startNode(r)": 1
+        }
+      }
+    ] : []
+  }
+
+  const querySet: QuerySpec[] = [
+    {
+      name: 'getFriendStatus',
+      query: readQuery,
+      params: getFriendStatusParams,
+      output: getFriendStatusOutput,
+    }
+  ]
+
+  const session: Session = mockSessionFromQuerySet(querySet)
+
+  return {
+    readQuery,
+    getFriendStatusParams,
+    getFriendStatusOutput,
+    querySet,
+    session
+  }
+}

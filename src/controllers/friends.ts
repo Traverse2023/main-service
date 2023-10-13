@@ -69,21 +69,17 @@ const getMutualFriends = async (req: Request, res: Response, next: NextFunction)
   } catch(error) { throw new HttpError(error, 400) }
 };
 
-const getFriendshipStatus = (
+const getFriendshipStatus = async (
   req: Request,
   res: Response,
   next: NextFunction
   ) => {
   const { user1Email, user2Email } = req.params;
   const db = new DB()
-  db.getFriendshipStatus(user1Email, user2Email)
-    .then((value) => {
-      console.log(value);
-      res.json(value);
-    })
-    .catch((err) => {
-      throw new HttpError(err, 400);
-    });
+  try {
+    const friendshipStatus = await db.getFriendshipStatus(user1Email, user2Email)
+    res.json(friendshipStatus)
+  } catch(error) { throw new HttpError(error, 400) }
 };
 
 const removeFriendRequest = async(
