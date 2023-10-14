@@ -15,8 +15,6 @@ const app: Express = express()
 app.use(express.json())
 
 app.use((req, res, next) => {
-  console.log("HEADERS SET")
-
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader(
     'Access-Control-Allow-Headers',
