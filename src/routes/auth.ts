@@ -1,4 +1,4 @@
-import express, { Router, Request, Response } from "Express";
+import express, { Router, Request, Response } from "express";
 import { check } from "express-validator";
 import { register, login } from "../controllers/auth.js";
 
