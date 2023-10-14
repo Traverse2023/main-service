@@ -15,12 +15,10 @@ interface User {
 const register = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
-  console.log("INSIDE REGISTERRRR")
   body('firstName').notEmpty().isString();
   body('lastName').notEmpty().isString();
   body('email').notEmpty().isEmail();
   const errors = validationResult(req);
-  // console.log('errors', errors);
 
   if (!errors.isEmpty()) {
     throw new HttpError("Invalid inputs passed, please check your data.", 422);
@@ -33,7 +31,6 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   } catch (err) {
     throw new HttpError(`Password hashing failed: ${err}`, 404);
   }
-
   const createdUser = {
     firstName,
     lastName,
@@ -43,7 +40,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   // if (!db) db = new DB()
   const db = new DB()
   const anyUsers = await db.findUser(email)
-  if (Object.keys(anyUsers).length) res.json(anyUsers)
+  if (Object.keys(anyUsers).length) res.status(400).json({msg: "Email already exists."})
   else {
     db.createUser(createdUser)
       .then((value) => {
@@ -74,32 +71,33 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  console.log(`Email is ${email}, password is ${password}`)
   const db = new DB();
 
   try {
-    const value: User = await db.findUser(email);    
-    console.log(value)
-    const isValidPassword = await bcrypt.compare(password, value.password);
+    const value: User = await db.findUser(email);
+    if (!Object.keys(value).length) res.status(400).json({msg: "User does not exist."})
+    else {
+      const isValidPassword = await bcrypt.compare(password, value.password);
 
-    if (!isValidPassword) {
-      throw new HttpError("Invalid creds", 401);
-    }
-
-    let token = jwt.sign(
-      { email: email },
-      "supersecret_dont_share",
-      {
-        expiresIn: "1h",
+      if (!isValidPassword) {
+        res.status(400).json({msg: "Incorrect Password."})
+      } else {
+        let token = jwt.sign(
+            { email: email },
+            "supersecret_dont_share",
+            {
+              expiresIn: "1h",
+            }
+        );
+        const ret = {
+          token: token,
+          email: value.email,
+          firstName: value.firstName,
+          lastName: value.lastName
+        }
+        res.json(ret);
       }
-    );
-    const ret = {
-      token: token,
-      email: value.email,
-      firstName: value.firstName,
-      lastName: value.lastName
     }
-    res.json(ret);
   } catch (err) {
     console.error(err); // Log the error for debugging
     throw err
