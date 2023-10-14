@@ -15,12 +15,10 @@ interface User {
 const register = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
-  console.log("INSIDE REGISTERRRR")
   body('firstName').notEmpty().isString();
   body('lastName').notEmpty().isString();
   body('email').notEmpty().isEmail();
   const errors = validationResult(req);
-  // console.log('errors', errors);
 
   if (!errors.isEmpty()) {
     throw new HttpError("Invalid inputs passed, please check your data.", 422);
@@ -30,11 +28,9 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   let hashedPassword;
   try {
     hashedPassword = await bcrypt.hash(password, 12);
-    console.log("hashpassword", hashedPassword)
   } catch (err) {
     throw new HttpError(`Password hashing failed: ${err}`, 404);
   }
-  console.log("hashpassword2", hashedPassword)
   const createdUser = {
     firstName,
     lastName,
@@ -72,18 +68,15 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
-  console.log("here74")
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  console.log(`Email is ${email}, password is ${password}`)
   const db = new DB();
 
   try {
     const value: User = await db.findUser(email);
     if (!Object.keys(value).length) res.status(400).json({msg: "User does not exist."})
     else {
-      console.log(value)
       const isValidPassword = await bcrypt.compare(password, value.password);
 
       if (!isValidPassword) {
