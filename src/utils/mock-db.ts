@@ -138,9 +138,6 @@ export async function getFriendshipStatus(user1Email: string, user2Email: string
     try {
       const readResult = await session.run(readQuery, { user1Email, user2Email })
       readResult.records.forEach((record) => {
-        console.log("record", record);
-        console.log("recordfields", record["_fields"]);
-
         results = {
           friendshipStatus: record["_fields"][0],
           initiatedUser: record["_fields"][1].properties.email,
@@ -150,7 +147,6 @@ export async function getFriendshipStatus(user1Email: string, user2Email: string
       reject(err);
     } finally {
       await session.close();
-      // console.log("178", results);
 
       resolve(results);
     }
