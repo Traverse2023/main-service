@@ -31,7 +31,6 @@ const acceptFriendRequest = async (
   const db = new DB()
   try {
   const value = await db.createFriendship(user1Email, user2Email);
-  console.log("VALUE in CONT", value);
   res.json(value);
 } catch (err) {
   console.error(err);
