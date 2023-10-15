@@ -12,6 +12,8 @@ import swaggerFile from './swagger_output.json' assert {type: "json"}
 
 const app: Express = express()
 
+const PORT = process.env.PORT || 8080
+
 app.use(express.json())
 
 app.use((req, res, next) => {
@@ -49,6 +51,6 @@ app.get("/Z", (req, res) => {
     res.json({message: error.message || 'An unknown error occurred!'});
   });
 
-app.listen(8000, () => {
-    console.log(`Server on 8000`);
+app.listen(PORT, () => {
+    console.log(`Server on ${PORT}`);
 })
