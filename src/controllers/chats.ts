@@ -1,4 +1,4 @@
-import express, {Router, Request, Response} from 'Express'
+import express, {Router, Request, Response} from 'express'
 
 const createChat = (req: Request, res: Response) => {
     // #swagger.tags = ['Chats']

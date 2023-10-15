@@ -10,6 +10,7 @@ phases:
   build:
     commands:
       - tsc
+      - npm test
 
 artifacts:
   files:
