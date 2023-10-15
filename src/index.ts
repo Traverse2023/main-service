@@ -22,7 +22,6 @@ app.use((req, res, next) => {
   )
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
-
   next()
 })
 
@@ -32,6 +31,9 @@ app.use("/api/search", searchRoutes)
 app.use("/api/friends", friendRoutes)
 app.use("/api/chats", chatRoutes)
 app.use('/doc', serve, setup(swaggerFile))
+app.get("/Z", (req, res) => {
+  res.json("HELLO")
+})
 
 
 // app.use((req, res, next) => {
@@ -47,6 +49,6 @@ app.use('/doc', serve, setup(swaggerFile))
     res.json({message: error.message || 'An unknown error occurred!'});
   });
 
-app.listen(8001, () => {
-    console.log(`Server on 8001`);
+app.listen(8000, () => {
+    console.log(`Server on 8000`);
 })

@@ -1,4 +1,4 @@
-import express, {Router, Request, Response} from 'Express'
+import express, {Router, Request, Response} from 'express'
 import { acceptFriendRequest, addFriend, getFriendRequests, getFriends, getFriendshipStatus, getMutualFriends, removeFriendRequest, sendFriendRequest } from '../controllers/friends.js'
 import { checkAuth } from '../utils/check-auth.js'
 

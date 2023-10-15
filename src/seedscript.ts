@@ -1,5 +1,7 @@
 import DB from './utils/db.js'
 import {response} from "express";
+import bcrypt from "bcryptjs";
+import {HttpError} from "./utils/http-error.js";
 
 const db = new DB()
 
@@ -17,13 +19,16 @@ const createUniqueUserConstraint = () => {
 
 const createUsers = async () => {
     try {
+        const hashedPassword = await bcrypt.hash("123", 12);
+        const hashedPassword2 = await bcrypt.hash("1234", 12);
+        const hashedPassword3 = await bcrypt.hash("123454", 12);
         const response = await Promise.all([
             new Promise((resolve, reject) => {
                 db.createUser({
                     firstName: "Isfar",
                     lastName: "Oshir",
                     email: "isfaroshir@gmail.com",
-                    password: "123"
+                    password: hashedPassword
                 }).then(response => {
                     resolve("Isfar");
                 }).catch(err => reject(err));
@@ -33,7 +38,7 @@ const createUsers = async () => {
                     firstName: "Farhan",
                     lastName: "Mashud",
                     email: "fmash@gmail.com",
-                    password: "1234"
+                    password: hashedPassword2
                 }).then(response => {
                     resolve("Farhan");
                 }).catch(err => reject(err));
@@ -43,7 +48,7 @@ const createUsers = async () => {
                     firstName: "John",
                     lastName: "Doe",
                     email: "jDoe@gmail.com",
-                    password: "123454"
+                    password: hashedPassword3
                 }).then(response => {
                     resolve("John");
                 }).catch(err => reject(err));
