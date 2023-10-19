@@ -270,15 +270,10 @@ class DB {
 
   async removeFriendRequest(user1Email, user2Email) {
     const session = this.localDriver.session({ database: "neo4j" });
-    console.log(user1Email, user2Email);
-
     const parameters = {
       user1Email,
       user2Email,
     };
-
-    console.log(parameters);
-
     const query = `MATCH (:User {email: $user1Email})-[r]-(:User {email: $user2Email}) DELETE r`;
     return new Promise(async (resolve, reject) => {
       try {
