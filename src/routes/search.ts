@@ -1,4 +1,4 @@
-import express, {Router, Request, Response} from 'Express'
+import express, {Router, Request, Response} from 'express'
 import { getUser, searchPosts, searchUsers } from '../controllers/search.js'
 import { checkAuth } from '../utils/check-auth.js'
 

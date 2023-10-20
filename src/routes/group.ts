@@ -1,4 +1,4 @@
-import express, {Router, Request, Response} from 'Express'
+import express, {Router, Request, Response} from 'express'
 import { createGroup, getGroups } from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 

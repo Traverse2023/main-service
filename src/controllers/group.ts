@@ -1,4 +1,4 @@
-import express, { Router, Request, Response, NextFunction } from "Express";
+import express, { Router, Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
 

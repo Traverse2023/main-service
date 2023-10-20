@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -r dist",
-    "start": "tsc && node dist/seedscript.js && node dist/swagger.js && node dist/index.js",
+    "start": "node dist/seedscript.js && node dist/swagger.js && node dist/index.js",
     "test": "ava"
   },
   "keywords": [],

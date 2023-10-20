@@ -1,7 +1,5 @@
 import DB from './utils/db.js'
-import {response} from "express";
 import bcrypt from "bcryptjs";
-import {HttpError} from "./utils/http-error.js";
 
 const db = new DB()
 
@@ -29,7 +27,7 @@ const createUsers = async () => {
                     lastName: "Oshir",
                     email: "isfaroshir@gmail.com",
                     password: hashedPassword
-                }).then(response => {
+                }).then( _ => {
                     resolve("Isfar");
                 }).catch(err => reject(err));
             }),
@@ -39,7 +37,7 @@ const createUsers = async () => {
                     lastName: "Mashud",
                     email: "fmash@gmail.com",
                     password: hashedPassword2
-                }).then(response => {
+                }).then( _ => {
                     resolve("Farhan");
                 }).catch(err => reject(err));
             }),
@@ -49,7 +47,7 @@ const createUsers = async () => {
                     lastName: "Doe",
                     email: "jDoe@gmail.com",
                     password: hashedPassword3
-                }).then(response => {
+                }).then( _ => {
                     resolve("John");
                 }).catch(err => reject(err));
             })
@@ -60,6 +58,28 @@ const createUsers = async () => {
     }
 }
 
+const createFriendships = async () => {
+    try {
+
+        const user1Email = "isfaroshir@gmail.com"
+        const user2Email = "fmash@gmail.com"
+        await db.createFriendship(user1Email, user2Email)
+        return `Created friendship between ${user1Email} and ${user2Email}`
+
+    } catch(error) { return error }
+}
+
+const createFriendRequests = async () => {
+    try {
+        await Promise.all([ 
+            db.createFriendRequest("jDoe@gmail.com", "fmash@gmail.com"),
+            db.createFriendRequest("jDoe@gmail.com", "isfaroshir@gmail.com")
+        ])
+        return "Friend request from jDoe@gmail.com successfully sent to fmash@gmail.com & isfaroshir@gmail.com"  
+    } catch (error) { return error }
+}
+
+
 const script = async () => {
     try {
         const clearResponse = await clear()
@@ -67,6 +87,10 @@ const script = async () => {
         console.log("Loading seed data...")
         const createUsersResponse = await createUsers()
         console.log(createUsersResponse)
+        const createFriendshipsResponse = await createFriendships()
+        console.log(createFriendshipsResponse)
+        const createFriendReqResponse = await createFriendRequests()
+        console.log(createFriendReqResponse)
     } catch (err) {
         console.log(err)
     }

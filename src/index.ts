@@ -14,6 +14,8 @@ import {friendsRouter} from "./routes/friends.js";
 
 const app: Express = express()
 
+const PORT = process.env.PORT || 8080
+
 app.use(express.json())
 
 app.use((req, res, next) => {
@@ -34,14 +36,13 @@ app.use("/api/friends", friendRoutes)
 app.use("/api/chats", chatRoutes)
 app.use('/doc', serve, setup(swaggerFile))
 
-  
-  app.use((error, req, res, next) => {
-    if (res.headerSent) {
-      return next(error);
-    }
-    res.status(error.code || 500)
-    res.json({message: error.message || 'An unknown error occurred!'});
-  });
+app.use((error, req, res, next) => {
+if (res.headerSent) {
+  return next(error);
+}
+res.status(error.code || 500)
+res.json({message: error.message || 'An unknown error occurred!'});
+});
 
 const server = http.createServer(app);
 
@@ -56,30 +57,6 @@ const io = new Server(server, {
 const friendsNamespace = io.of('/friends');
 friendsRouter(friendsNamespace)
 
-// // Define a namespace for friends
-// const friendsNamespace = io.of('/friends');
-//
-// const userSockets = new Map();
-
-// friendsNamespace.on('connection', (socket) => {
-//   // When a user connects, get their email from the query parameter
-//   const email = socket.handshake.query.email;
-//   console.log(email, "joined")
-//   // Store the user's socket with their email
-//   userSockets.set(email, socket);
-//
-//   // Listen for friend requests and emit to the recipient
-//   socket.on('sendFriendRequest', (recipientEmail) => {
-//     const recipientSocket = userSockets.get(recipientEmail);
-//
-//     if (recipientSocket) {
-//       console.log("sending to friend req to", recipientEmail)
-//       console.log('index77', email)
-//       recipientSocket.emit('receiveFriendRequest', email);
-//     }
-//   });
-// });
-
-server.listen(8000, () => {
-    console.log(`Server on 8000`);
+server.listen(PORT, () => {
+    console.log(`Server on ${PORT}`);
 })
