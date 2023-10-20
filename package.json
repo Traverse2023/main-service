@@ -36,6 +36,7 @@
     "jsonwebtoken": "^9.0.0",
     "neo4j-driver": "^5.6.0",
     "sinon": "^16.0.0",
+    "socket.io": "^4.7.2",
     "swagger-autogen": "^2.22.0",
     "swagger-ui-express": "^4.6.0"
   }
