@@ -1,5 +1,15 @@
 import express, {Router, Request, Response} from 'express'
-import { acceptFriendRequest, addFriend, getFriendRequests, getFriends, getFriendshipStatus, getMutualFriends, removeFriendRequest, sendFriendRequest } from '../controllers/friends.js'
+import {
+    acceptFriendRequest,
+    addFriend,
+    FriendsController,
+    getFriendRequests,
+    getFriends,
+    getFriendshipStatus,
+    getMutualFriends,
+    removeFriendRequest,
+    sendFriendRequest
+} from '../controllers/friends.js'
 import { checkAuth } from '../utils/check-auth.js'
 
 const router = Router()
@@ -12,10 +22,32 @@ router.get('/getFriendRequests/:userEmail', getFriendRequests)
 router.get('/getFriends/:user1Email', getFriends)
 router.get('/getMutualFriends/:user1Email/:user2Email', getMutualFriends)
 router.get('/getFriendshipStatus/:user1Email/:user2Email', getFriendshipStatus)
+
 router.get('/removeFriendRequest/:user1Email/:user2Email', removeFriendRequest)
 
-router.post('/sendFriendRequest', sendFriendRequest)
+// router.post('/sendFriendRequest', sendFriendRequest)
 router.post('/acceptFriendRequest', acceptFriendRequest)
 
+const friendsRouter = (friendsNamespace) => {
+    const friendsController = new FriendsController(friendsNamespace);
 
-export { router }
+    friendsNamespace.on('connection', (socket) => {
+        const email = socket.handshake.query.email
+        friendsController.registerSocket(email, socket)
+
+
+        socket.on('sendFriendRequest', (recipientEmail) => {
+            friendsController.sendFriendRequest(email, recipientEmail).then((val)=>{
+                // console.log('routesfriends38', val)
+            });
+        });
+
+        socket.on('acceptFriendRequest', (recipientEmail) => {
+            friendsController.acceptFriendRequest(email, recipientEmail).then((val)=>{
+                // console.log('routesfriends38', val)
+            });
+        });
+    });
+};
+
+export { friendsRouter, router }

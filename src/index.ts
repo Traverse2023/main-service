@@ -8,7 +8,9 @@ import { router as groupRoutes } from './routes/group.js'
 
 import {setup, serve} from 'swagger-ui-express'
 import swaggerFile from './swagger_output.json' assert {type: "json"}
-
+import * as http from "http";
+import {Server} from "socket.io";
+import {friendsRouter} from "./routes/friends.js";
 
 const app: Express = express()
 
@@ -34,21 +36,27 @@ app.use("/api/friends", friendRoutes)
 app.use("/api/chats", chatRoutes)
 app.use('/doc', serve, setup(swaggerFile))
 
+app.use((error, req, res, next) => {
+if (res.headerSent) {
+  return next(error);
+}
+res.status(error.code || 500)
+res.json({message: error.message || 'An unknown error occurred!'});
+});
 
+const server = http.createServer(app);
 
-// app.use((req, res, next) => {
-//     const error = new HttpError('Could not find this route.', 404);
-//     throw error;
-//   });
-  
-  app.use((error, req, res, next) => {
-    if (res.headerSent) {
-      return next(error);
-    }
-    res.status(error.code || 500)
-    res.json({message: error.message || 'An unknown error occurred!'});
-  });
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
 
-app.listen(PORT, () => {
+  }
+});
+
+const friendsNamespace = io.of('/friends');
+friendsRouter(friendsNamespace)
+
+server.listen(PORT, () => {
     console.log(`Server on ${PORT}`);
 })

@@ -197,7 +197,8 @@ class DB {
     return new Promise(async (resolve, reject) => {
       try {
         const readQuery = `MATCH (u:User)
-                                WHERE u.firstName CONTAINS $searched OR u.lastName CONTAINS $searched OR u.email CONTAINS $searched
+                                WITH u, u.firstName + ' ' + u.lastName AS fullname
+                                WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) OR toLower(u.lastName) CONTAINS toLower($searched) OR u.email CONTAINS $searched
                                 RETURN u, 
                                 EXISTS( (:User {email: $searcher})-[:FRIENDS]-(u) ),
                                 EXISTS( (:User {email: $searcher})-[:FRIEND_REQUEST]-(u) )`;
