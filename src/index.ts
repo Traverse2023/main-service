@@ -33,9 +33,7 @@ app.use("/api/search", searchRoutes)
 app.use("/api/friends", friendRoutes)
 app.use("/api/chats", chatRoutes)
 app.use('/doc', serve, setup(swaggerFile))
-app.get("/Z", (req, res) => {
-  res.json("HELLO")
-})
+
 
 
 // app.use((req, res, next) => {
