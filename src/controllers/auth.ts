@@ -48,7 +48,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
         try {
           token = jwt.sign(
             { email: createdUser.email },
-            "supersecret_dont_share",
+            process.env.JWT_WEB_TOKEN,
             {
               expiresIn: "1h",
             }
