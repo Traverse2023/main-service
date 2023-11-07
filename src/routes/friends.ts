@@ -35,9 +35,23 @@ const friendsRouter = (friendsNamespace) => {
         const email = socket.handshake.query.email
         friendsController.registerSocket(email, socket)
 
+        socket.on("connect_error", (err) => {
+            console.log(`connect_error due to ${err.message}`);
+        });
+
+        socket.on('unfriend', (recipientEmail) => {
+            console.log('43 unfriend', recipientEmail)
+        });
 
         socket.on('sendFriendRequest', (recipientEmail) => {
             friendsController.sendFriendRequest(email, recipientEmail).then((val)=>{
+                // console.log('routesfriends38', val)
+            });
+        });
+
+        socket.on('remReq', (recipientEmail) => {
+            console.log('here52declineReq')
+            friendsController.declineFriendRequest(email, recipientEmail).then((val)=>{
                 // console.log('routesfriends38', val)
             });
         });
@@ -47,6 +61,7 @@ const friendsRouter = (friendsNamespace) => {
                 // console.log('routesfriends38', val)
             });
         });
+
     });
 };
 

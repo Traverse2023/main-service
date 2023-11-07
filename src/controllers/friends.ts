@@ -142,6 +142,17 @@ class FriendsController {
       throw new HttpError(err, 404);
     }
   }
+
+  async declineFriendRequest(senderEmail, recipientEmail) {
+    const recipientSocket = this.userSockets.get(recipientEmail);
+    const db = new DB()
+    try {
+      const value = await db.removeFriendRequest(senderEmail, recipientEmail)
+      recipientSocket.emit('receiveDeclineFriendRequest', senderEmail)
+    } catch(error) {
+      throw new HttpError(error, 400)
+    }
+  }
 }
 
 export {
