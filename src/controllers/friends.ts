@@ -153,6 +153,17 @@ class FriendsController {
       throw new HttpError(error, 400)
     }
   }
+
+  async unfriend(senderEmail, recipientEmail) {
+    const recipientSocket = this.userSockets.get(recipientEmail);
+    const db = new DB()
+    try {
+      const value = await db.unfriend(senderEmail, recipientEmail)
+      recipientSocket.emit('receiveUnfriendNotification', senderEmail)
+    } catch(error) {
+      throw new HttpError(error, 400)
+    }
+  }
 }
 
 export {

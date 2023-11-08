@@ -41,6 +41,9 @@ const friendsRouter = (friendsNamespace) => {
 
         socket.on('unfriend', (recipientEmail) => {
             console.log('43 unfriend', recipientEmail)
+            friendsController.unfriend(email, recipientEmail).then((val) => {
+
+            })
         });
 
         socket.on('sendFriendRequest', (recipientEmail) => {
@@ -49,7 +52,7 @@ const friendsRouter = (friendsNamespace) => {
             });
         });
 
-        socket.on('remReq', (recipientEmail) => {
+        socket.on('declineFriendRequest', (recipientEmail) => {
             console.log('here52declineReq')
             friendsController.declineFriendRequest(email, recipientEmail).then((val)=>{
                 // console.log('routesfriends38', val)
