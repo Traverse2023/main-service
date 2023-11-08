@@ -83,6 +83,7 @@ export const register = async (req: Request, res: Response, next: NextFunction, 
         throw new HttpError("Invalid creds", 401);
       }
   
+      console.log("WEB TOKEN", process.env.JWT_WEB_TOKEN)
       let token = jwt.sign(
         { email: email },
         process.env.JWT_WEB_TOKEN,
