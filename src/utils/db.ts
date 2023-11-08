@@ -290,6 +290,27 @@ class DB {
     })
   }
 
+  async unfriend(user1Email, user2Email) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    const parameters = {
+      user1Email,
+      user2Email,
+    };
+    const query = `MATCH (:User {email: $user1Email})-[r]-(:User {email: $user2Email}) DELETE r`;
+    return new Promise(async (resolve, reject) => {
+      try {
+        await session.run(query, parameters)
+        console.log("Relationship deleted successfully");
+        resolve("Relationship deleted successfully")
+      }
+      catch (error) {
+        console.log(error)
+        reject(error)
+      }
+      session.close()
+    })
+  }
+
   async createGroup(groupName, user1Email) {
     const session = this.localDriver.session({ database: "neo4j" });
     console.log('params', groupName, user1Email);
