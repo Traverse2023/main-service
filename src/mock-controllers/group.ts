@@ -1,15 +1,16 @@
-import express, { Router, Request, Response, NextFunction } from "Express";
+import express, { Router, Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
 
-const createGroup = (req: Request, res: Response, next: NextFunction) => {
+const createGroup = (req: Request, res: Response, next: NextFunction, db?: DB) => {
     const { groupName, user1Email } = req.body;
     console.log('====================================');
     console.log('reqbody', req.body);
     console.log('====================================');
-    const db = new DB();
+    if (!db) db = new DB();
     db.createGroup(groupName, user1Email)
       .then((value) => {
+        console.log(value);
         res.json(value);
       })
       .catch((err) => {
@@ -17,10 +18,10 @@ const createGroup = (req: Request, res: Response, next: NextFunction) => {
       });
   };
 
-  const getGroups = (req: Request, res: Response, next: NextFunction) => {
+  const getGroups = (req: Request, res: Response, next: NextFunction, db?: DB) => {
     const { user1Email } = req.params;
   
-    const db = new DB();
+    if (!db) db = new DB();
     db.getGroups(user1Email)
       .then((value) => {
         console.log(value);

@@ -47,6 +47,6 @@ app.use('/doc', serve, setup(swaggerFile))
     res.json({message: error.message || 'An unknown error occurred!'});
   });
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server on ${process.env.PORT}`);
+app.listen(process.env.PORT || 8080, () => {
+    console.log(`Server on ${process.env.PORT || 8080}`);
 })
