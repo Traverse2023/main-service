@@ -63,5 +63,3 @@ groupsRouter(groupsNamespace)
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}`);
 })
-
-server.timeout = 10000
