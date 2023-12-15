@@ -4,7 +4,7 @@ import { router as friendRoutes} from './routes/friends.js'
 import { router as chatRoutes } from './routes/chats.js'
 import { router as authRoutes} from './routes/auth.js'
 import { router as searchRoutes } from './routes/search.js'
-import { router as groupRoutes } from './routes/group.js'
+import {groupsRouter, router as groupRoutes} from './routes/group.js'
 
 import {setup, serve} from 'swagger-ui-express'
 import swaggerFile from './swagger_output.json' assert {type: "json"}
@@ -14,7 +14,7 @@ import {friendsRouter} from "./routes/friends.js";
 
 const app: Express = express()
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 8000
 
 app.use(express.json())
 
@@ -56,6 +56,9 @@ const io = new Server(server, {
 
 const friendsNamespace = io.of('/friends');
 friendsRouter(friendsNamespace)
+
+const groupsNamespace = io.of('/groups');
+groupsRouter(groupsNamespace)
 
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}`);

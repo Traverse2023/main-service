@@ -19,7 +19,7 @@ const createUsers = async () => {
     try {
         const hashedPassword = await bcrypt.hash("123", 12);
         const hashedPassword2 = await bcrypt.hash("1234", 12);
-        const hashedPassword3 = await bcrypt.hash("123454", 12);
+        const hashedPassword3 = await bcrypt.hash("123", 12);
         const response = await Promise.all([
             new Promise((resolve, reject) => {
                 db.createUser({
@@ -43,9 +43,9 @@ const createUsers = async () => {
             }),
             new Promise((resolve, reject) => {
                 db.createUser({
-                    firstName: "John",
-                    lastName: "Doe",
-                    email: "jDoe@gmail.com",
+                    firstName: "Bryan",
+                    lastName: "Palomo",
+                    email: "bp@gmail.com",
                     password: hashedPassword3
                 }).then( _ => {
                     resolve("John");
@@ -63,8 +63,10 @@ const createFriendships = async () => {
 
         const user1Email = "isfaroshir@gmail.com"
         const user2Email = "fmash@gmail.com"
+        const user3Email = "bp@gmail.com"
         await db.createFriendship(user1Email, user2Email)
-        return `Created friendship between ${user1Email} and ${user2Email}`
+        await db.createFriendship(user2Email, user3Email)
+        return `Created friendship between ${user1Email} and ${user2Email} and ${user3Email} and ${user2Email}`
 
     } catch(error) { return error }
 }
@@ -89,8 +91,8 @@ const script = async () => {
         console.log(createUsersResponse)
         const createFriendshipsResponse = await createFriendships()
         console.log(createFriendshipsResponse)
-        const createFriendReqResponse = await createFriendRequests()
-        console.log(createFriendReqResponse)
+        // const createFriendReqResponse = await createFriendRequests()
+        // console.log(createFriendReqResponse)
     } catch (err) {
         console.log(err)
     }

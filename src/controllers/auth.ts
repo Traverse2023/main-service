@@ -80,7 +80,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       const isValidPassword = await bcrypt.compare(password, value.password);
 
       if (!isValidPassword) {
-        res.status(400).json({msg: "Incorrect Password."})
+        res.status(401).json({msg: "Incorrect Password."})
       } else {
         let token = jwt.sign(
             { email: email },
