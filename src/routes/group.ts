@@ -1,7 +1,6 @@
 import express, {Router, Request, Response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
-import {FriendsController} from "../controllers/friends.js";
 import moment from "moment";
 
 const router = Router()
@@ -48,10 +47,12 @@ const groupsRouter = (groupsNamespace) => {
             // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
-        socket.on("sendMessage", (groupId : string, msg : string) => {
+        socket.on("sendMessage", (groupId : string, {msg, firstName, lastName}) => {
             const messageInfo = {
                 email,
                 text: msg,
+                firstName,
+                lastName,
                 time: moment().format('h:mm a')
             }
             groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
