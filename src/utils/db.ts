@@ -1,4 +1,5 @@
 import { driver, auth, Session } from "neo4j-driver";
+import { sendCreateGroupJob } from "./spring-boot-jobs.js";
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -229,8 +230,6 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
-          console.log("record", record);
-          console.log("recordfields", record["_fields"]);
 
           results = {
             friendshipStatus: record["_fields"][0],
@@ -311,24 +310,24 @@ class DB {
     })
   }
 
-  async createGroup(groupName, user1Email) {
+  async createGroup(groupId, groupName, user1Email) {
     const session = this.localDriver.session({ database: "neo4j" });
-    console.log('params', groupName, user1Email);
-    
+
     try {
-      const writeQuery = `CREATE (g:Group {groupName: $groupName})
+      const writeQuery = `CREATE (g:Group {id: $groupId, groupName: $groupName})
                           WITH g
                           MATCH (u:User {email: $user1Email})
                           CREATE (g)<-[:MEMBER]-(u)`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { groupName, user1Email })
+        tx.run(writeQuery, { groupId, groupName, user1Email })
       );
 
       writeResult.records.forEach((record) => {
         const createdGroup = record.get("g");
-        console.info("CREATED GROUP: ", groupName);
+        console.log("CREATED GROUP: ", groupName);
       });
+      // await sendCreateGroupJob(groupName, user1Email)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
@@ -349,12 +348,78 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
-          console.log("record", record);
-          console.log("recordfields", record._fields);
           results.push({
             groupName: record._fields[0].properties.groupName,
+            groupId: record._fields[0].properties.id
           });
         });
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        // console.log("178", results);
+
+        resolve(results);
+      }
+    });
+  }
+
+  async getMembers(id) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const readQuery = `MATCH (u:User)-[:MEMBER]->(Group {id: $id})
+                                   RETURN u`;
+
+        const readResult = await session.executeRead((tx) =>
+            tx.run(readQuery, { id })
+        );
+        results = readResult.records.map(record => record["_fields"][0].properties)
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    });
+  }
+
+  async getFriendsWhoAreNotMembers(user1Email, id) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const readQuery = `MATCH (:User {email:$user1Email})-[:FRIENDS]-(u:User)
+                                                      WHERE NOT (u)-[:MEMBER]-(:Group {id: $id})
+                                                      RETURN u`;
+
+        const readResult = await session.executeRead((tx) =>
+            tx.run(readQuery, { user1Email, id })
+        );
+        results = readResult.records.map(record => record["_fields"][0].properties)
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    });
+  }
+
+  async addMemberToGroup(user1Email, groupId) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (u:User {email: $user1Email})
+                                                        MATCH (g:Group {id: $groupId})
+                                                        CREATE (u)-[r:MEMBER]->(g)
+                                                        RETURN u, g`;
+
+        const writeResult = await session.executeWrite((tx) =>
+            tx.run(writeQuery, { user1Email, groupId })
+        );
       } catch (err) {
         reject(err);
       } finally {
