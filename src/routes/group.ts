@@ -1,7 +1,6 @@
 import express, {Router, Request, Response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
-import {FriendsController} from "../controllers/friends.js";
 import moment from "moment";
 import {sendMessageSQS} from "../utils/spring-boot-jobs.js";
 
