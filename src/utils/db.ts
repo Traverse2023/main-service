@@ -347,12 +347,12 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
+          console.log('dbGetGroup', record._fields[0].properties)
           results.push({
             groupName: record._fields[0].properties.groupName,
             groupId: record._fields[0].properties.id
           });
         });
-        console.log('dbGetGroup', readResult.record._fields[0].properties)
       } catch (err) {
         reject(err);
       } finally {
