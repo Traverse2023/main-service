@@ -3,6 +3,7 @@ import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsCo
 import { checkAuth } from '../utils/check-auth.js'
 import {FriendsController} from "../controllers/friends.js";
 import moment from "moment";
+import {sendMessageSQS} from "../utils/spring-boot-jobs.js";
 
 const router = Router()
 
@@ -48,12 +49,15 @@ const groupsRouter = (groupsNamespace) => {
             // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
-        socket.on("sendMessage", (groupId : string, msg : string) => {
+        socket.on("sendMessage", (groupId, message_info) => {
             const messageInfo = {
                 email,
-                text: msg,
-                time: moment().format('h:mm a')
+                text: message_info.msg,
+                firstName: message_info.firstName,
+                lastName: message_info.lastName,
+                time: (new Date).toISOString()
             }
+            sendMessageSQS({...messageInfo, groupId, channelName: "general"})
             groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
         })
 

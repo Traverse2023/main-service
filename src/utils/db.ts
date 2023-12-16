@@ -1,5 +1,4 @@
 import { driver, auth, Session } from "neo4j-driver";
-import { sendCreateGroupJob } from "./spring-boot-jobs.js";
 import dotenv from 'dotenv'
 dotenv.config()
 

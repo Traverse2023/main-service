@@ -54,6 +54,8 @@ const io = new Server(server, {
   }
 });
 
+const centralNamespace = io.of('/central')
+
 const friendsNamespace = io.of('/friends');
 friendsRouter(friendsNamespace)
 
