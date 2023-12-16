@@ -352,6 +352,7 @@ class DB {
             groupId: record._fields[0].properties.id
           });
         });
+        console.log('dbGetGroup', readResult.record._fields[0].properties)
       } catch (err) {
         reject(err);
       } finally {

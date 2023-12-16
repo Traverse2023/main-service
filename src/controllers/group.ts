@@ -27,6 +27,7 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
     db.getGroups(user1Email)
       .then((value) => {
         // console.log('line29controllergroup', value);
+          console.log('getGroupController', value)
         res.json(value);
       })
       .catch((err) => {
