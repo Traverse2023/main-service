@@ -58,6 +58,7 @@ const groupsRouter = (groupsNamespace) => {
             }
             sendMessageSQS({...messageInfo, groupId, channelName: "general"})
             groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
+
         })
 
     });

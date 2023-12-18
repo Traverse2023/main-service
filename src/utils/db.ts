@@ -58,6 +58,29 @@ class DB {
       await session.close();
     }
   }
+
+  async savePFP(user1Email, pfpURL) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
+    try {
+      const writeQuery = `MERGE (u:User {email: $user1Email})
+                                                    SET u.pfpURL = $pfpURL
+                                                    RETURN u`;
+
+      const writeResult = await session.executeWrite((tx) =>
+          tx.run(writeQuery, { user1Email, pfpURL })
+      );
+
+      writeResult.records.forEach((record) => {
+        const updatedUser = record.get("u");
+      });
+    } catch (error) {
+      console.error(`Something went wrong: ${error}`);
+    } finally {
+      await session.close();
+    }
+  }
+
+
   async createUser({ firstName, lastName, email, password }) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {

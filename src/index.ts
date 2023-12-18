@@ -4,6 +4,7 @@ import { router as friendRoutes} from './routes/friends.js'
 import { router as chatRoutes } from './routes/chats.js'
 import { router as authRoutes} from './routes/auth.js'
 import { router as searchRoutes } from './routes/search.js'
+import {router as userRoutes} from './routes/user.js'
 import {groupsRouter, router as groupRoutes} from './routes/group.js'
 
 import {setup, serve} from 'swagger-ui-express'
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 })
 
 app.use("/api/auth", authRoutes)
+app.use("/api/user", userRoutes)
 app.use("/api/group", groupRoutes)
 app.use("/api/search", searchRoutes)
 app.use("/api/friends", friendRoutes)
