@@ -54,6 +54,7 @@ const groupsRouter = (groupsNamespace) => {
                 text: message_info.msg,
                 firstName: message_info.firstName,
                 lastName: message_info.lastName,
+                pfpURL: message_info.pfpURL,
                 time: (new Date).toISOString()
             }
             sendMessageSQS({...messageInfo, groupId, channelName: "general"})

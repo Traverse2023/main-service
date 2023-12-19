@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 interface User {
+  pfpURL?: string;
   email?: string
   firstName?: string
   lastName?: string
@@ -93,7 +94,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
           token: token,
           email: value.email,
           firstName: value.firstName,
-          lastName: value.lastName
+          lastName: value.lastName,
+          pfpURL: value.pfpURL
         }
         res.json(ret);
       }

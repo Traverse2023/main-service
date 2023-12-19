@@ -60,6 +60,7 @@ class DB {
   }
 
   async savePFP(user1Email, pfpURL) {
+    console.log('savePFP', user1Email, pfpURL)
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
       const writeQuery = `MERGE (u:User {email: $user1Email})
@@ -81,16 +82,17 @@ class DB {
   }
 
 
-  async createUser({ firstName, lastName, email, password }) {
+  async createUser({ firstName, lastName, email, password, pfpURL="https://traverse-profile-pics.s3.amazonaws.com/pfps/blank-pfp.png" }) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
       const writeQuery = `CREATE (u:User { firstName: $firstName,
                                                  lastName: $lastName,
                                                  email: $email,
-                                                 password: $password})`;
+                                                 password: $password,
+                                                 pfpURL: $pfpURL})`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { firstName, lastName, email, password })
+        tx.run(writeQuery, { firstName, lastName, email, password, pfpURL })
       );
 
       writeResult.records.forEach((record) => {
@@ -116,6 +118,7 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
+          // console.log('findUserDB', record.get("user").properties)
           res(record.get("user").properties);
         });
         res({})
