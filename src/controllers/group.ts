@@ -11,7 +11,7 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
     const groupResponse = await axios.post(`${process.env.STORAGE_SERVICE_URL}/api/v1/groups/createGroup`, {groupName})
     // console.log(groupResponse.data.id)
     const db = new DB();
-    db.createGroup(groupName, user1Email)
+    db.createGroup(groupResponse.data.id, groupName, user1Email)
       .then((value) => {
         console.log(value);
         res.json(value);

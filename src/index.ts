@@ -12,7 +12,7 @@ import swaggerFile from './swagger_output.json' assert {type: "json"}
 
 const app: Express = express()
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 8000
 
 app.use(express.json())
 

@@ -287,24 +287,24 @@ class DB {
     })
   }
 
-  async createGroup(groupName, user1Email) {
+  async createGroup(groupId, groupName, user1Email) {
     const session = this.localDriver.session({ database: "neo4j" });
-    console.log('params', groupName, user1Email);
-    
+
     try {
-      const writeQuery = `CREATE (g:Group {groupName: $groupName})
+      const writeQuery = `CREATE (g:Group {id: $groupId, groupName: $groupName})
                           WITH g
                           MATCH (u:User {email: $user1Email})
                           CREATE (g)<-[:MEMBER]-(u)`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { groupName, user1Email })
+        tx.run(writeQuery, { groupId, groupName, user1Email })
       );
 
       writeResult.records.forEach((record) => {
         const createdGroup = record.get("g");
-        console.info("CREATED GROUP: ", groupName);
+        console.log("CREATED GROUP: ", groupName);
       });
+      // await sendCreateGroupJob(groupName, user1Email)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
