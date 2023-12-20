@@ -103,11 +103,8 @@ const script = async () => {
         console.log(createFriendshipsResponse)
         const createFriendReqResponse = await createFriendRequests()
         console.log(createFriendReqResponse)
-<<<<<<< Updated upstream
-=======
         const createGroupResponse = await createGroups()
         console.log(createGroupResponse)
->>>>>>> Stashed changes
     } catch (err) {
         console.log(err)
     }
