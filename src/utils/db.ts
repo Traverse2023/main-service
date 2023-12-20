@@ -118,9 +118,7 @@ class DB {
         const writeResult = await session.executeWrite((tx) =>
           tx.run(writeQuery, { user1Email, user2Email })
         );
-        writeResult.records.forEach((record) => {
-          resolve(`${user1Email} sent ${user2Email} a friend req.`);
-        });
+        resolve(`${user1Email} sent ${user2Email} a friend req.`);
       } catch (err) {
         reject(err);
       } finally {
