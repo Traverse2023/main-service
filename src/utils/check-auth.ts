@@ -11,7 +11,7 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
       throw new Error("Authentication failed!");
     }
-    const decodedToken = jwt.verify(token, 'supersecret_dont_share')
+    const decodedToken = jwt.verify(token, process.env.JWT_WEB_TOKEN)
     //@ts-ignore
     req.userData = {email: decodedToken.email}
     next()

@@ -96,6 +96,76 @@ const removeFriendRequest = async(
   }
 };
 
+class FriendsController {
+  private io
+  private userSockets
+  constructor(io) {
+    this.io = io;
+    this.userSockets = new Map();
+  }
+
+  registerSocket(email, givenSocket) {
+    this.userSockets.set(email, givenSocket)
+    // console.log(this.userSockets.keys())
+  }
+
+  async sendFriendRequest(senderEmail, recipientEmail) {
+    const recipientSocket = this.userSockets.get(recipientEmail);
+    const db = new DB()
+    try {
+      const value = await db.createFriendRequest(senderEmail, recipientEmail);
+      if (recipientSocket) {
+        console.log("Sending friend req to", recipientEmail)
+        recipientSocket.emit('receiveFriendRequest', senderEmail);
+      } else {
+
+      }
+    } catch (err) {
+      console.error(err);
+      throw new HttpError(err, 404);
+    }
+  }
+
+  async acceptFriendRequest(senderEmail, recipientEmail) {
+    const recipientSocket = this.userSockets.get(recipientEmail);
+    const db = new DB()
+    try {
+      const value = await db.createFriendship(senderEmail, recipientEmail);
+      if (recipientSocket) {
+        console.log("Sending accepted friend request notification to", recipientEmail)
+        recipientSocket.emit('receiveAcceptFriendRequest', senderEmail);
+      } else {
+
+      }
+    } catch (err) {
+      console.error(err);
+      throw new HttpError(err, 404);
+    }
+  }
+
+  async declineFriendRequest(senderEmail, recipientEmail) {
+    const recipientSocket = this.userSockets.get(recipientEmail);
+    const db = new DB()
+    try {
+      const value = await db.removeFriendRequest(senderEmail, recipientEmail)
+      recipientSocket.emit('receiveDeclineFriendRequest', senderEmail)
+    } catch(error) {
+      throw new HttpError(error, 400)
+    }
+  }
+
+  async unfriend(senderEmail, recipientEmail) {
+    const recipientSocket = this.userSockets.get(recipientEmail);
+    const db = new DB()
+    try {
+      const value = await db.unfriend(senderEmail, recipientEmail)
+      recipientSocket.emit('receiveUnfriendNotification', senderEmail)
+    } catch(error) {
+      throw new HttpError(error, 400)
+    }
+  }
+}
+
 export {
   addFriend,
   acceptFriendRequest,
@@ -105,4 +175,5 @@ export {
   getMutualFriends,
   getFriendshipStatus,
   removeFriendRequest,
+  FriendsController
 };

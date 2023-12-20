@@ -195,7 +195,8 @@ class DB {
     return new Promise(async (resolve, reject) => {
       try {
         const readQuery = `MATCH (u:User)
-                                WHERE u.firstName CONTAINS $searched OR u.lastName CONTAINS $searched OR u.email CONTAINS $searched
+                                WITH u, u.firstName + ' ' + u.lastName AS fullname
+                                WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) OR toLower(u.lastName) CONTAINS toLower($searched) OR u.email CONTAINS $searched
                                 RETURN u, 
                                 EXISTS( (:User {email: $searcher})-[:FRIENDS]-(u) ),
                                 EXISTS( (:User {email: $searcher})-[:FRIEND_REQUEST]-(u) )`;
@@ -226,8 +227,6 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
-          console.log("record", record);
-          console.log("recordfields", record["_fields"]);
 
           results = {
             friendshipStatus: record["_fields"][0],
@@ -287,9 +286,30 @@ class DB {
     })
   }
 
+
+  async unfriend(user1Email, user2Email) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    const parameters = {
+      user1Email,
+      user2Email,
+    };
+    const query = `MATCH (:User {email: $user1Email})-[r]-(:User {email: $user2Email}) DELETE r`;
+    return new Promise(async (resolve, reject) => {
+      try {
+        await session.run(query, parameters)
+        console.log("Relationship deleted successfully");
+        resolve("Relationship deleted successfully")
+      }
+      catch (error) {
+        console.log(error)
+        reject(error)
+      }
+      session.close()
+    })
+  }
+
   async createGroup(groupId, groupName, user1Email) {
     const session = this.localDriver.session({ database: "neo4j" });
-
     try {
       const writeQuery = `CREATE (g:Group {id: $groupId, groupName: $groupName})
                           WITH g
@@ -325,12 +345,79 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
-          console.log("record", record);
-          console.log("recordfields", record._fields);
+          console.log('dbGetGroup', record._fields[0].properties)
           results.push({
             groupName: record._fields[0].properties.groupName,
+            groupId: record._fields[0].properties.id
           });
         });
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        // console.log("178", results);
+
+        resolve(results);
+      }
+    });
+  }
+
+  async getMembers(id) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const readQuery = `MATCH (u:User)-[:MEMBER]->(Group {id: $id})
+                                   RETURN u`;
+
+        const readResult = await session.executeRead((tx) =>
+            tx.run(readQuery, { id })
+        );
+        results = readResult.records.map(record => record["_fields"][0].properties)
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    });
+  }
+
+  async getFriendsWhoAreNotMembers(user1Email, id) {
+    const session : Session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const readQuery = `MATCH (:User {email:$user1Email})-[:FRIENDS]-(u:User)
+                                                      WHERE NOT (u)-[:MEMBER]-(:Group {id: $id})
+                                                      RETURN u`;
+
+        const readResult = await session.executeRead((tx) =>
+            tx.run(readQuery, { user1Email, id })
+        );
+        results = readResult.records.map(record => record["_fields"][0].properties)
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    });
+  }
+
+  async addMemberToGroup(user1Email, groupId) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (u:User {email: $user1Email})
+                                                        MATCH (g:Group {id: $groupId})
+                                                        CREATE (u)-[r:MEMBER]->(g)
+                                                        RETURN u, g`;
+
+        const writeResult = await session.executeWrite((tx) =>
+            tx.run(writeQuery, { user1Email, groupId })
+        );
       } catch (err) {
         reject(err);
       } finally {
