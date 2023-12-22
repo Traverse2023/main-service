@@ -57,10 +57,10 @@ const io = new Server(server, {
 });
 
 const friendsNamespace = io.of('/friends');
-friendsRouter(friendsNamespace)
+const friendsController = friendsRouter(friendsNamespace)
 
 const groupsNamespace = io.of('/groups');
-groupsRouter(groupsNamespace)
+groupsRouter(groupsNamespace, friendsController)
 
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}`);

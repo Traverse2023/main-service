@@ -33,7 +33,13 @@ const friendsRouter = (friendsNamespace) => {
 
     friendsNamespace.on('connection', (socket) => {
         const email = socket.handshake.query.email
+        console.log('36friendsconnection', email)
         friendsController.registerSocket(email, socket)
+
+        socket.on('disconnect', () => {
+            const disconnectingUserEmail = socket.handshake.query.email
+            friendsController.getUserSockets().delete(disconnectingUserEmail, socket)
+        })
 
         socket.on("connect_error", (err) => {
             console.log(`connect_error due to ${err.message}`);
@@ -66,6 +72,7 @@ const friendsRouter = (friendsNamespace) => {
         });
 
     });
+    return friendsController
 };
 
 export { friendsRouter, router }

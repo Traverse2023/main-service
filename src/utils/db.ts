@@ -277,7 +277,7 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User) [1,2,3,4,6]
+        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User)
                                     WHERE (f)-[:FRIENDS]-(:User {email: $user2Email}) 
                                     RETURN DISTINCT f`;
 

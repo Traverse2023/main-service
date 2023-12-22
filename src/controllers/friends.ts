@@ -104,9 +104,18 @@ class FriendsController {
     this.userSockets = new Map();
   }
 
+  getUserSockets() {
+    return this.userSockets;
+  }
+
   registerSocket(email, givenSocket) {
     this.userSockets.set(email, givenSocket)
     // console.log(this.userSockets.keys())
+  }
+
+  sendGlobalNotification(senderEmail, recipientEmail, notification) {
+    const recipientSocket = this.userSockets.get(recipientEmail);
+    recipientSocket.emit('globalNotification', notification)
   }
 
   async sendFriendRequest(senderEmail, recipientEmail) {
@@ -147,8 +156,10 @@ class FriendsController {
     const recipientSocket = this.userSockets.get(recipientEmail);
     const db = new DB()
     try {
-      const value = await db.removeFriendRequest(senderEmail, recipientEmail)
-      recipientSocket.emit('receiveDeclineFriendRequest', senderEmail)
+      if (recipientSocket) {
+        const value = await db.removeFriendRequest(senderEmail, recipientEmail)
+        recipientSocket.emit('receiveDeclineFriendRequest', senderEmail)
+      }
     } catch(error) {
       throw new HttpError(error, 400)
     }
@@ -158,8 +169,10 @@ class FriendsController {
     const recipientSocket = this.userSockets.get(recipientEmail);
     const db = new DB()
     try {
-      const value = await db.unfriend(senderEmail, recipientEmail)
-      recipientSocket.emit('receiveUnfriendNotification', senderEmail)
+      if (recipientSocket) {
+        const value = await db.unfriend(senderEmail, recipientEmail)
+        recipientSocket.emit('receiveUnfriendNotification', senderEmail)
+      }
     } catch(error) {
       throw new HttpError(error, 400)
     }

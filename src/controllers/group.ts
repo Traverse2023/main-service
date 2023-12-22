@@ -85,8 +85,22 @@ class GroupsController {
         this.userSockets = new Map();
     }
 
-    registerSocket(email, givenSocket) {
-        this.userSockets.set(email, givenSocket)
+    getUserSockets(){
+        return this.userSockets
+    }
+
+    getUserEmailsByGroupID(groupId) {
+        const emails = Array.from( this.userSockets.keys() )
+        const res = emails.map((email) => {
+            if (this.userSockets.get(email).groupId === groupId) {
+                return email
+            }
+        })
+        return res
+    }
+
+    registerSocket(email, givenSocket, groupId) {
+        this.userSockets.set(email, {socket: givenSocket, groupId: groupId})
         // console.log(this.userSockets.keys())
     }
 
