@@ -113,8 +113,7 @@ class FriendsController {
     // console.log(this.userSockets.keys())
   }
 
-  sendGlobalNotification(senderEmail, recipientEmail, notification) {
-    const recipientSocket = this.userSockets.get(recipientEmail);
+  sendGlobalNotification(recipientSocket, notification) {
     recipientSocket.emit('globalNotification', notification)
   }
 
