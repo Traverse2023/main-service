@@ -44,7 +44,6 @@ const groupsRouter = (groupsNamespace, userController) => {
             socket.leaveAll()
             groupsController.deleteSocket(email)
             socket.join(groupId)
-            groupsController.registerSocket(email, socket, groupId)
             const joinMsg = email + " read"
             groupsNamespace.to(groupId).emit('receiveMessage', joinMsg)
             // socket.to(groupId).emit('joinMessage', joinMsg)
@@ -60,31 +59,49 @@ const groupsRouter = (groupsNamespace, userController) => {
                 pfpURL: message_info.pfpURL,
                 time: (new Date).toISOString()
             }
+
             sendMessageSQS({...messageInfo, groupId, channelName: "general"})
-            groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
-            // users actively in chat
-            const usersConnectedToChat = Array.from(groupsController.getUserEmailsByGroupID(groupId))
-            console.log('connectedToChat', usersConnectedToChat)
-            // All members fo chat wether online offline or actively in chat
-            const members = message_info.members
-            console.log('67members', members)
-            //get members who are not connected to chat
-            // @ts-ignore
-            const notInGCMembers = members.filter(member => !usersConnectedToChat.some(user => user === member.email));
-            console.log('not in chat', notInGCMembers)
-            //check if they are connected to app by checking friends controller
-            const activeUsers = Array.from(userController.getUserSockets().keys())
-            console.log('activeUsers', activeUsers)  // m: ['bp@gmail.com', 'io@gmail.com']  notconnecttochat: ['io@gmail.com']
-            // @ts-ignore                           // activeUsers: ['bp@gmail.com', 'io@gmail.com', 'f@gmail.com']
-            const activeMembers = notInGCMembers.filter(member => activeUsers.some(user => user === member.email))
-            console.log('activeMembers', activeMembers)
-            activeMembers.forEach(member => {
+                        groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
+            //const allConnectedClients = io.sockets.clients() 
+            // User objects from database
+            
+            let groupMembers;
+            groupsController.getMembersByGroupId(groupId)
+            .then((value) => {
+                groupMembers = value;
+            })
+            // sockets of users actively in group-chat
+            const activeMembersInChat = groupsNamespace.clients(groupId)
+            // emails
+            const activeMembersNotInChat = groupMembers.filter(member => !activeMembersInChat.some(i => i.handshake.query.email === member.email))
+            console.log(groupMembers)
+            console.log(activeMembersNotInChat)
+
+
+
+//             // users actively in chat
+//             const usersConnectedToChat = Array.from(groupsController.getUserEmailsByGroupID(groupId))
+//             console.log('connectedToChat', usersConnectedToChat)
+//             // All members fo chat wether online offline or actively in chat
+//             const members = message_info.members
+//             console.log('67members', members)
+//             //get members who are not connected to chat
+//             // @ts-ignore
+//             const notInGCMembers = members.filter(member => !usersConnectedToChat.some(user => user === member.email));
+//             console.log('not in chat', notInGCMembers)
+//             //check if they are connected to app by checking friends controller
+//             const activeUsers = Array.from(userController.getUserSockets().keys())
+//             console.log('activeUsers', activeUsers)  // m: ['bp@gmail.com', 'io@gmail.com']  notconnecttochat: ['io@gmail.com']
+//             // @ts-ignore                           // activeUsers: ['bp@gmail.com', 'io@gmail.com', 'f@gmail.com']
+//             const activeMembers = notInGCMembers.filter(member => activeUsers.some(user => user === member.email))
+//             console.log('activeMembers', activeMembers)
+            activeMembersNotInChat.forEach(member => {
                 const notification = {
                     groupId: groupId,
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                     notificationType: "MESSAGE_SENT"
                 }
-                userController.sendGlobalNotification(email, member.email, notification)
+                userController.sendGlobalNotification(, notification)
             })
         })
 

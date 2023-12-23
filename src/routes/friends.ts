@@ -34,7 +34,7 @@ const friendsRouter = (friendsNamespace) => {
     friendsNamespace.on('connection', (socket) => {
         const email = socket.handshake.query.email
         console.log('36friendsconnection', email)
-        friendsController.registerSocket(email, socket)
+
 
         socket.on('disconnect', () => {
             const disconnectingUserEmail = socket.handshake.query.email
