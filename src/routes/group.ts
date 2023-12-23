@@ -107,11 +107,11 @@ const groupsRouter = (groupsNamespace, userController) => {
                     notificationType: "MESSAGE_SENT"
                 }
                 userController.sendGlobalNotification(userSocket, notification)
-            })
+
         })
 
     });
-};
+});
 
 
 export { router, groupsRouter }
