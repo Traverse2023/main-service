@@ -10,7 +10,7 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
     // console.log('====================================');
     const groupResponse = await axios.post(`${process.env.STORAGE_SERVICE_URL}/api/v1/groups/createGroup`, {groupName})
     // console.log(groupResponse.data.id)
-    const db = new DB();
+    const db = DB.getInstance();
     db.createGroup(groupResponse.data.id, groupName, user1Email)
       .then((value) => {
         res.json(value);
@@ -24,7 +24,7 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
   const getGroups = (req: Request, res: Response, next: NextFunction) => {
     const { user1Email } = req.params;
   
-    const db = new DB();
+    const db = DB.getInstance();
     db.getGroups(user1Email)
       .then((value) => {
         // console.log('line29controllergroup', value);
@@ -40,7 +40,7 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
   const getMembers = (req: Request, res: Response, next: NextFunction) => {
       const { groupId } = req.params;
 
-      const db = new DB();
+      const db = DB.getInstance();
       db.getMembers(groupId)
           .then((value) => {
               // console.log(value);
@@ -54,7 +54,7 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
 const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunction) => {
     const { user1Email, groupId } = req.params;
 
-    const db = new DB();
+    const db = DB.getInstance();
     db.getFriendsWhoAreNotMembers(user1Email, groupId)
         .then((value) => {
             // console.log(value);
@@ -109,7 +109,7 @@ class GroupsController {
 //     }
   
     async getMembersByGroupId(groupId) {
-      const db = new DB()
+      const db = DB.getInstance();
       db.getMembers(groupId)
       .then((value) => {
         return value;
@@ -121,7 +121,7 @@ class GroupsController {
     }
     async addMember(senderEmail, recipientEmail, groupId, groupsNamespace) {
         const recipientSocket = this.userSockets.get(recipientEmail);
-        const db = new DB()
+        const db = DB.getInstance();
         try {
             const value = await db.addMemberToGroup(recipientEmail, groupId);
             groupsNamespace.to(groupId).emit('receiveAddedToGroupNotification', senderEmail, recipientEmail)

@@ -2,7 +2,7 @@ import express, {Router, Request, Response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 import {sendMessageSQS} from "../utils/spring-boot-jobs.js";
-import DB from "../utils/db.js";
+
 
 const router = Router()
 
@@ -61,57 +61,35 @@ const groupsRouter = (groupsNamespace, userController) => {
 
             sendMessageSQS({...messageInfo, groupId, channelName: "general"})
                         groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
-            //const allConnectedClients = io.sockets.clients() 
-            // User objects from database
-
-            // members from DB
-            let groupMembers;
-
-            groupsController.getMembersByGroupId(groupId)
-            .then((value) => {
-                groupMembers = value;
-            })
-             
-            // sockets of all active users
-            const allActiveUsers = groupsNamespace.clients()
+            const activeUsers = groupsNamespace.clients();
+            // Users
+            const groupMembers = message_info.members;
             // sockets of users actively in group-chat
-            const activeMembersInChat = groupsNamespace.clients(groupId)
-            const allActiveUsersNotInChat = allActiveUsers.filter(userSocket => !activeMembersInChat.some(i => i.handshake.query.email === userSocket.handshake.query.email))
-            const activeMembersNotInChat = allActiveUsersNotInChat.filter(socket => groupMembers.some(member => member.email === socket.handshake.query.email))
-            console.log(activeMembersNotInChat)
-            console.log(allActiveUsersNotInChat)
+            const activeMembersInChat = groupsNamespace.clients(groupId);
+            // 
+            const membersNotInChat = groupMembers.filter(member => !activeMembersInChat.some(
+                i => i.handshake.query.email === member.email));
+            // Members of group chat active but not in chat
+            const activeMembersNotInChat = activeUsers.filter(activeUser => membersNotInChat.some(
+                member => member.email === activeUser.handshake.query.email));
+                console.log(`activeUsers: ${activeUsers}\ngroupMemebers: ${groupMembers}
+                \nactiveMemebrsInChat: ${activeMembersInChat}}\nactiveMembersNotInChat: ${activeMembersNotInChat}`);
 
+            console.log(groupMembers)
+            console.log(membersNotInChat)
 
-
-//             // users actively in chat
-//             const usersConnectedToChat = Array.from(groupsController.getUserEmailsByGroupID(groupId))
-//             console.log('connectedToChat', usersConnectedToChat)
-//             // All members fo chat wether online offline or actively in chat
-//             const members = message_info.members
-//             console.log('67members', members)
-//             //get members who are not connected to chat
-//             // @ts-ignore
-//             const notInGCMembers = members.filter(member => !usersConnectedToChat.some(user => user === member.email));
-//             console.log('not in chat', notInGCMembers)
-//             //check if they are connected to app by checking friends controller
-//             const activeUsers = Array.from(userController.getUserSockets().keys())
-//             console.log('activeUsers', activeUsers)  // m: ['bp@gmail.com', 'io@gmail.com']  notconnecttochat: ['io@gmail.com']
-//             // @ts-ignore                           // activeUsers: ['bp@gmail.com', 'io@gmail.com', 'f@gmail.com']
-//             const activeMembers = notInGCMembers.filter(member => activeUsers.some(user => user === member.email))
-//             console.log('activeMembers', activeMembers)
             activeMembersNotInChat.forEach(userSocket => {
                 const notification = {
-                    sender: email,
                     groupId: groupId,
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                     notificationType: "MESSAGE_SENT"
                 }
-                userController.sendGlobalNotification(userSocket, notification)
 
+                userController.sendGlobalNotification(userSocket, notification)
+            })
         })
 
     });
-});
-
+};
 
 export { router, groupsRouter }

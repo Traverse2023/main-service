@@ -1,4 +1,4 @@
-import { driver, auth, Session } from "neo4j-driver";
+import { driver, auth, Session, Integer } from "neo4j-driver";
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -15,10 +15,21 @@ interface DB {
 }
 
 class DB {
-  constructor() {
+  // Single instance of DB
+  private static instance: DB;
+
+  private constructor() {
     this.localDriver = driver(uri, auth.basic(user, password), {
       disableLosslessIntegers: true,
     });
+  }
+
+  // To get instance of DB. Will always result in the same DB instance being returned
+  public static getInstance(): DB {
+    if (!DB.instance) {
+      DB.instance = new DB();
+    }
+    return DB.instance;
   }
 
   async clear() {

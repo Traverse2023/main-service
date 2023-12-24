@@ -11,7 +11,7 @@ const addFriend = (req: Request, res: Response) => {
 const sendFriendRequest = async (req: Request, res: Response, next: NextFunction) => {
   const { user1Email, user2Email } = req.body;
 
-const db = new DB()
+const db = DB.getInstance()
   try {
       const value = await db.createFriendRequest(user1Email, user2Email);
       res.json(value);
@@ -28,7 +28,7 @@ const acceptFriendRequest = async (
 ) => {
   const { user1Email, user2Email } = req.body;
 
-  const db = new DB()
+  const db = DB.getInstance()
   try {
   const value = await db.createFriendship(user1Email, user2Email);
   res.json(value);
@@ -42,7 +42,7 @@ const acceptFriendRequest = async (
 const getFriendRequests = async (req: Request, res: Response, next: NextFunction) => {
   const { userEmail } = req.params;
 
-  const db = new DB();
+  const db = DB.getInstance()
   try {
     const requests = await db.getFriendRequests(userEmail)
     res.json(requests)
@@ -52,7 +52,7 @@ const getFriendRequests = async (req: Request, res: Response, next: NextFunction
 
 const getFriends = async (req: Request, res: Response, next: NextFunction) => {
   const { user1Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const friends = await db.getFriends(user1Email)
     res.json(friends)
@@ -61,7 +61,7 @@ const getFriends = async (req: Request, res: Response, next: NextFunction) => {
 
 const getMutualFriends = async (req: Request, res: Response, next: NextFunction) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const mutualFriends = await db.getMutualFriends(user1Email, user2Email)
     res.json(mutualFriends)
@@ -74,7 +74,7 @@ const getFriendshipStatus = async (
   next: NextFunction
   ) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const friendshipStatus = await db.getFriendshipStatus(user1Email, user2Email)
     res.json(friendshipStatus)
@@ -87,7 +87,7 @@ const removeFriendRequest = async(
   next: NextFunction
   ) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const value = await db.removeFriendRequest(user1Email, user2Email)
     res.json(value)
@@ -104,14 +104,14 @@ class FriendsController {
     this.userSockets = new Map();
   }
 
-  getUserSockets() {
-    return this.userSockets;
-  }
+  // getUserSockets() {
+  //   return this.userSockets;
+  // }
 
-  registerSocket(email, givenSocket) {
-    this.userSockets.set(email, givenSocket)
-    // console.log(this.userSockets.keys())
-  }
+  // registerSocket(email, givenSocket) {
+  //   this.userSockets.set(email, givenSocket)
+  //   // console.log(this.userSockets.keys())
+  // }
 
   sendGlobalNotification(recipientSocket, notification) {
     recipientSocket.emit('globalNotification', notification)
@@ -119,7 +119,7 @@ class FriendsController {
 
   async sendFriendRequest(senderEmail, recipientEmail) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    const db = DB.getInstance()
     try {
       const value = await db.createFriendRequest(senderEmail, recipientEmail);
       if (recipientSocket) {
@@ -136,7 +136,7 @@ class FriendsController {
 
   async acceptFriendRequest(senderEmail, recipientEmail) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    const db = DB.getInstance()
     try {
       const value = await db.createFriendship(senderEmail, recipientEmail);
       if (recipientSocket) {
@@ -153,7 +153,7 @@ class FriendsController {
 
   async declineFriendRequest(senderEmail, recipientEmail) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    const db = DB.getInstance()
     try {
       if (recipientSocket) {
         const value = await db.removeFriendRequest(senderEmail, recipientEmail)
@@ -166,7 +166,7 @@ class FriendsController {
 
   async unfriend(senderEmail, recipientEmail) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    const db = DB.getInstance()
     try {
       if (recipientSocket) {
         const value = await db.unfriend(senderEmail, recipientEmail)

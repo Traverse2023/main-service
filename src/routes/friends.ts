@@ -38,7 +38,8 @@ const friendsRouter = (friendsNamespace) => {
 
         socket.on('disconnect', () => {
             const disconnectingUserEmail = socket.handshake.query.email
-            friendsController.getUserSockets().delete(disconnectingUserEmail, socket)
+            // friendsController.getUserSockets().delete(disconnectingUserEmail, socket)
+            console.log(`Disconnecting user ${disconnectingUserEmail}`)
         })
 
         socket.on("connect_error", (err) => {
