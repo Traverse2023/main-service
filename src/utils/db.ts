@@ -36,7 +36,7 @@ class DB {
     const session : Session = this.localDriver.session({ database: "neo4j" });
 
     try {
-      const result = await session.writeTransaction(async (tx) => {
+      const result = await session.executeWrite(async (tx) => {
         // Cypher query to delete all nodes and relationships
         const query = 'MATCH (n) DETACH DELETE n';
         return await tx.run(query);
