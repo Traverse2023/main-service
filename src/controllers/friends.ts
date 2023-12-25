@@ -114,6 +114,9 @@ class FriendsController {
   // }
 
   sendGlobalNotification(recipientSocket, notification) {
+
+    console.log(notification, recipientSocket);
+
     recipientSocket.emit('globalNotification', notification)
   }
 
