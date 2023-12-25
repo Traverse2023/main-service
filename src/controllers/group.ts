@@ -68,7 +68,7 @@ const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunct
 // const addMember = (req: Request, res: Response, next: NextFunction) => {
 //     const { user1Email, groupId } = req.params;
 //
-//     const db = new DB();
+//     const db = DB.getInstance();
 //     db.addMemberToGroup(user1Email, groupId)
 //         .then((value) => {
 //             console.log(value);

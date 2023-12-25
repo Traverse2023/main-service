@@ -7,7 +7,7 @@ const createGroup = (req: Request, res: Response, next: NextFunction, db?: DB) =
     console.log('====================================');
     console.log('reqbody', req.body);
     console.log('====================================');
-    if (!db) db = new DB();
+    if (!db) db = DB.getInstance();
     db.createGroup("1" ,groupName, user1Email)
       .then((value) => {
         console.log(value);
@@ -21,7 +21,7 @@ const createGroup = (req: Request, res: Response, next: NextFunction, db?: DB) =
   const getGroups = (req: Request, res: Response, next: NextFunction, db?: DB) => {
     const { user1Email } = req.params;
   
-    if (!db) db = new DB();
+    if (!db) db = DB.getInstance();
     db.getGroups(user1Email)
       .then((value) => {
         console.log(value);

@@ -21,7 +21,6 @@ const groupsRouter = (groupsNamespace, userController) => {
 
     groupsNamespace.on('connection', (socket) => {
         const email = socket.handshake.query.email
-
         // socket.on("connect_error", (err) => {
         //     console.log(`connect_error due to ${err.message}`);
         // });
@@ -48,7 +47,7 @@ const groupsRouter = (groupsNamespace, userController) => {
             // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
-        socket.on("sendMessage", (groupId, message_info) => {
+        socket.on("sendMessage", async (groupId, message_info) => {
             const groupName = message_info.groupName;
             const messageInfo = {
                 email,
@@ -60,23 +59,20 @@ const groupsRouter = (groupsNamespace, userController) => {
             }
 
             sendMessageSQS({...messageInfo, groupId, channelName: "general"})
-                        groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
-            const activeUsers = groupsNamespace.clients();
+            groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
+            const activeUsers = await groupsNamespace.fetchSockets();
+            console.log('activeUsers', activeUsers.length)
             // Users
             const groupMembers = message_info.members;
             // sockets of users actively in group-chat
-            const activeMembersInChat = groupsNamespace.clients(groupId);
-            // 
+            const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
             const membersNotInChat = groupMembers.filter(member => !activeMembersInChat.some(
                 i => i.handshake.query.email === member.email));
             // Members of group chat active but not in chat
             const activeMembersNotInChat = activeUsers.filter(activeUser => membersNotInChat.some(
                 member => member.email === activeUser.handshake.query.email));
-                console.log(`activeUsers: ${activeUsers}\ngroupMemebers: ${groupMembers}
-                \nactiveMemebrsInChat: ${activeMembersInChat}}\nactiveMembersNotInChat: ${activeMembersNotInChat}`);
 
-            console.log(groupMembers)
-            console.log(membersNotInChat)
+
 
             activeMembersNotInChat.forEach(userSocket => {
                 const notification = {
@@ -84,8 +80,8 @@ const groupsRouter = (groupsNamespace, userController) => {
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                     notificationType: "MESSAGE_SENT"
                 }
-
-                userController.sendGlobalNotification(userSocket, notification)
+                console.log('86 sending to', userSocket.handshake.query.email, notification)
+                userSocket.emit('globalNotification', notification)
             })
         })
 
