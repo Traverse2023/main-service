@@ -4,7 +4,7 @@ import DB from '../utils/db.js'
 
 const searchPosts = (req: Request, res: Response, next: NextFunction) => {
     const {userEmail} = req.params
-    const db = new DB()
+    const db = DB.getInstance()
     db.getFriends(userEmail).then(value => {
         console.log(value);
         res.json(value)
@@ -15,7 +15,7 @@ const searchPosts = (req: Request, res: Response, next: NextFunction) => {
 
 const searchUsers =(req: Request, res: Response, next: NextFunction) => {
     const {searcher, searched} = req.params
-    const db = new DB()
+    const db = DB.getInstance()
     db.searchUsers(searcher, searched).then(value => {
         console.log(value);
         res.json(value)
@@ -26,7 +26,7 @@ const searchUsers =(req: Request, res: Response, next: NextFunction) => {
 
 const getUser = (req: Request, res: Response, next: NextFunction) => {
     const {user1Email} = req.params
-    const db = new DB()
+    const db = DB.getInstance()
     db.findUser(user1Email).then(value => {
         console.log(value);
         res.json(value)

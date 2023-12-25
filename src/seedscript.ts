@@ -1,7 +1,7 @@
 import DB from './utils/db.js'
 import bcrypt from "bcryptjs";
 
-const db = new DB()
+const db = DB.getInstance()
 
 const clear = () => {
     return new Promise((resolve, reject) => {

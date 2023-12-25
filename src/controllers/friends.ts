@@ -104,16 +104,10 @@ class FriendsController {
     this.userSockets = new Map();
   }
 
-  // getUserSockets() {
-  //   return this.userSockets;
-  // }
-
-  // registerSocket(email, givenSocket) {
-  //   this.userSockets.set(email, givenSocket)
-  //   // console.log(this.userSockets.keys())
-  // }
-
   sendGlobalNotification(recipientSocket, notification) {
+
+    console.log(notification, recipientSocket);
+
     recipientSocket.emit('globalNotification', notification)
   }
 
