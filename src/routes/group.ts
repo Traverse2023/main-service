@@ -73,14 +73,15 @@ const groupsRouter = (groupsNamespace, userController) => {
 
 
 
-            membersNotInChat.forEach(member => {
+            membersNotInChat.forEach(async member => {
                 const notification = {
                     recipientEmail: member.email,
                     groupId: groupId,
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                     notificationType: "MESSAGE_SENT"
                 }
-                StorageService.getInstance().createNotification(notification)
+                console.log('Sending notification', notification)
+                await StorageService.getInstance().createNotification(notification)
             })
 
             // Members of group chat active in app but not in chat

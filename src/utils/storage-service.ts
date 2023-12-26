@@ -4,7 +4,7 @@ class StorageService {
 
     private static instance: StorageService;
     private static groupsURI = "/api/v1/groups/createGroup"
-    private static notificationURI = "/api/v1/notifications"
+    private static notificationURI = "/api/v1/notifications/createNotification"
 
 
     public static getInstance() {
@@ -23,7 +23,7 @@ class StorageService {
 
     async createNotification(notification) {
         console.log(`Notification URL: ${process.env.STORAGE_SERVICE_URL+StorageService.notificationURI}`)
-        const res = await axios.post(process.env.STORAGE_SERVICE_URL+StorageService.notificationURI, {notification})
+        const res = await axios.post(process.env.STORAGE_SERVICE_URL+StorageService.notificationURI, notification)
         // console.log(res.data);
         return res;
     }

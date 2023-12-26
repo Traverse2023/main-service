@@ -48,7 +48,7 @@ const createUsers = async () => {
                     email: "bp@gmail.com",
                     password: hashedPassword3
                 }).then( _ => {
-                    resolve("John");
+                    resolve("Bryan");
                 }).catch(err => reject(err));
             })
         ]);
@@ -74,10 +74,10 @@ const createFriendships = async () => {
 const createFriendRequests = async () => {
     try {
         await Promise.all([ 
-            db.createFriendRequest("jDoe@gmail.com", "fmash@gmail.com"),
-            db.createFriendRequest("jDoe@gmail.com", "isfaroshir@gmail.com")
+            db.createFriendRequest("bp@gmail.com", "fmash@gmail.com"),
+            db.createFriendRequest("bp@gmail.com", "isfaroshir@gmail.com")
         ])
-        return "Friend request from jDoe@gmail.com successfully sent to fmash@gmail.com & isfaroshir@gmail.com"  
+        return "Friend request from bp@gmail.com successfully sent to fmash@gmail.com & isfaroshir@gmail.com"
     } catch (error) { return error }
 }
 
