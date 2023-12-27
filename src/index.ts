@@ -7,6 +7,8 @@ import { router as searchRoutes } from './routes/search.js'
 import {router as userRoutes} from './routes/user.js'
 import {groupsRouter, router as groupRoutes} from './routes/group.js'
 
+
+
 //import {setup, serve} from 'swagger-ui-express'
 //import swaggerFile from './swagger_output.json' assert {type: "json"}
 import * as http from "http";
@@ -36,6 +38,7 @@ app.use("/api/group", groupRoutes)
 app.use("/api/search", searchRoutes)
 app.use("/api/friends", friendRoutes)
 app.use("/api/chats", chatRoutes)
+// app.use("/api/notifications", notificationRoutes)
 //app.use('/doc', serve, setup(swaggerFile))
 
 app.use((error, req, res, next) => {
@@ -61,6 +64,9 @@ const friendsController = friendsRouter(friendsNamespace)
 
 const groupsNamespace = io.of('/groups');
 groupsRouter(groupsNamespace, friendsController)
+
+const notificationsNamespace = io.of('/notifications');
+// notificationRouter(notificationsNamespace)
 
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}`);

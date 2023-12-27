@@ -22,3 +22,23 @@ export const sendMessageSQS = ({pfpURL, text, email, groupId, channelName, first
     });
 
 }
+
+export const sendNotificationSQS = ({forEmail, eventType, notificationMessage, link} ) => {
+    return new Promise(async (resolve, reject) => {
+        console.log("====Sending sendNotificationSQS to SQS====")
+        const client = new SQSClient({ region: "us-east-1" });
+        const params = {
+          MessageBody: JSON.stringify({ forEmail, eventType, notificationMessage, link}),
+          QueueUrl: process.env.SQS_QUEUE_URL,
+          MessageGroupId: `sendNotification`,
+          MessageDeduplicationId: `sendNotification-${uuidv4()}`
+        };
+        try {
+            await client.send(new SendMessageCommand(params));
+            resolve("successfully sent message");
+        } catch(error) {
+            console.log(error)
+            reject(error);
+        }
+    });
+}

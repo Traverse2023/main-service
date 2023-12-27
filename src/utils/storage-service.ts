@@ -1,12 +1,10 @@
 import axios from "axios";
-import { response } from "express";
-
 
 class StorageService {
 
     private static instance: StorageService;
     private static groupsURI = "/api/v1/groups/createGroup"
-    private static notificationURI = ""
+    private static notificationURI = "/api/v1/notifications/createNotification"
 
 
     public static getInstance() {
@@ -17,14 +15,16 @@ class StorageService {
     }
 
     async createGroup(groupName) {
+        console.log(`Group URL: ${process.env.STORAGE_SERVICE_URL+StorageService.groupsURI}`)
         const res = await axios.post(process.env.STORAGE_SERVICE_URL+StorageService.groupsURI, {groupName});
-        console.log(res);
+        // console.log(res.data);
         return res;
     }
 
     async createNotification(notification) {
-        const res = axios.post(process.env.STORAGE_SERVICE_URL+StorageService.notificationURI, {notification})
-        console.log(res);
+        console.log(`Notification URL: ${process.env.STORAGE_SERVICE_URL+StorageService.notificationURI}`)
+        const res = await axios.post(process.env.STORAGE_SERVICE_URL+StorageService.notificationURI, notification)
+        // console.log(res.data);
         return res;
     }
 
