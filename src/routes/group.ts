@@ -59,7 +59,7 @@ const groupsRouter = (groupsNamespace, userController) => {
                 time: (new Date).toISOString()
             }
 
-            sendMessageSQS({...messageInfo, groupId, channelName: "general"})
+            // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
 
             groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
             const activeUsers = await groupsNamespace.fetchSockets();
@@ -90,6 +90,7 @@ const groupsRouter = (groupsNamespace, userController) => {
             
             activeMembersNotInChat.forEach(userSocket => {
                 const notification = {
+                    recipientEmail: userSocket.handshake.query.email,
                     groupId: groupId,
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                     notificationType: "MESSAGE_SENT"
