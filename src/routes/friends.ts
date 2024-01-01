@@ -33,6 +33,7 @@ const friendsRouter = (friendsNamespace) => {
 
     friendsNamespace.on('connection', (socket) => {
         const email = socket.handshake.query.email
+        friendsController.registerSocket(email, socket)
         console.log('36friendsconnection', email)
 
 
