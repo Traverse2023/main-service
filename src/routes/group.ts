@@ -78,6 +78,7 @@ const groupsRouter = (groupsNamespace, userController) => {
                 const notification = {
                     recipientEmail: member.email,
                     groupId: groupId,
+                    groupName: groupName,
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                     notificationType: "MESSAGE_SENT"
                 }
@@ -92,6 +93,7 @@ const groupsRouter = (groupsNamespace, userController) => {
                 const notification = {
                     recipientEmail: userSocket.handshake.query.email,
                     groupId: groupId,
+                    groupName: groupName,
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                     notificationType: "MESSAGE_SENT"
                 }
