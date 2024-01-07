@@ -40,7 +40,7 @@ export const register = async (req: Request, res: Response, next: NextFunction, 
       email,
       password: hashedPassword,
     };
-    if (!db) db = new DB()
+    if (!db) db = DB.getInstance()
     const anyUsers = await db.findUser(email)
     if (Object.keys(anyUsers).length) res.json(anyUsers)
     else {
@@ -73,7 +73,7 @@ export const register = async (req: Request, res: Response, next: NextFunction, 
     // #swagger.tags = ['Authentication']
     // #swagger.description = 'Endpoint para obter um usuário.'
     const { email, password } = req.body;
-    if (!db) db = new DB();
+    if (!db) db = DB.getInstance();
   
     try {
       const value: User = await db.findUser(email);    

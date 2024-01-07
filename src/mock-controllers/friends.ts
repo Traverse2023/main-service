@@ -11,7 +11,7 @@ const addFriend = (req: Request, res: Response) => {
 const sendFriendRequest = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
   const { user1Email, user2Email } = req.body;
 
-  if (!db) db = new DB();
+  if (!db) db = DB.getInstance();
 
   try {
       const value = await db.createFriendRequest(user1Email, user2Email);
@@ -30,7 +30,7 @@ const acceptFriendRequest = async (
 ) => {
   const { user1Email, user2Email } = req.body;
 
-  if (!db) db = new DB();
+  if (!db) db = DB.getInstance();
 try {
   const value = await db.createFriendship(user1Email, user2Email);
   res.json(value);
@@ -44,7 +44,7 @@ try {
 const getFriendRequests = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
   const { userEmail } = req.params;
 
-  if (!db) db = new DB();
+  if (!db) db = DB.getInstance();
   try {
     const requests = await db.getFriendRequests(userEmail)
     res.json(requests)
@@ -55,7 +55,7 @@ const getFriendRequests = async (req: Request, res: Response, next: NextFunction
 
 const getFriends = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
     const { user1Email } = req.params;
-    if (!db) db = new DB();
+    if (!db) db = DB.getInstance();
     try {
       const friends = await db.getFriends(user1Email)
       res.json(friends)
@@ -64,7 +64,7 @@ const getFriends = async (req: Request, res: Response, next: NextFunction, db?: 
 
   const getMutualFriends = async (req: Request, res: Response, next: NextFunction, db?: DB) => {
     const { user1Email, user2Email } = req.params;
-    if (!db) db = new DB();
+    if (!db) db = DB.getInstance();
     try {
       const mutualFriends = await db.getMutualFriends(user1Email, user2Email)
       res.json(mutualFriends)
@@ -78,7 +78,7 @@ const getFriends = async (req: Request, res: Response, next: NextFunction, db?: 
     db?: DB
     ) => {
     const { user1Email, user2Email } = req.params;
-    if (!db) db = new DB();
+    if (!db) db = DB.getInstance();
     try {
       const friendshipStatus = await db.getFriendshipStatus(user1Email, user2Email)
       res.json(friendshipStatus)
@@ -92,7 +92,7 @@ const removeFriendRequest = async(
   db?: DB
 ) => {
   const { user1Email, user2Email } = req.params;
-  if (!db) db = new DB();
+  if (!db) db = DB.getInstance();
   try {
     const value = await db.removeFriendRequest(user1Email, user2Email)
     res.json(value)

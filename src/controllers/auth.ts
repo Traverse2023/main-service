@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 interface User {
+  pfpURL?: string;
   email?: string
   firstName?: string
   lastName?: string
@@ -37,8 +38,8 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     email,
     password: hashedPassword,
   };
-  // if (!db) db = new DB()
-  const db = new DB()
+  // if (!db) db = DB.getInstance()
+  const db = DB.getInstance()
   const anyUsers = await db.findUser(email)
   if (Object.keys(anyUsers).length) res.status(400).json({msg: "Email already exists."})
   else {
@@ -71,7 +72,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   // #swagger.tags = ['Authentication']
   // #swagger.description = 'Endpoint para obter um usuário.'
   const { email, password } = req.body;
-  const db = new DB();
+  const db = DB.getInstance();
 
   try {
     const value: User = await db.findUser(email);
@@ -93,7 +94,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
           token: token,
           email: value.email,
           firstName: value.firstName,
-          lastName: value.lastName
+          lastName: value.lastName,
+          pfpURL: value.pfpURL
         }
         res.json(ret);
       }
