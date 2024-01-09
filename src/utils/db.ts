@@ -155,9 +155,7 @@ class DB {
         const writeResult = await session.executeWrite((tx) =>
           tx.run(writeQuery, { user1Email, user2Email })
         );
-        writeResult.records.forEach((record) => {
-          resolve(`${user1Email} sent ${user2Email} a friend req.`);
-        });
+        resolve(`${user1Email} sent ${user2Email} a friend req.`);
       } catch (err) {
         reject(err);
       } finally {
@@ -325,6 +323,7 @@ class DB {
     })
   }
 
+
   async unfriend(user1Email, user2Email) {
     const session = this.localDriver.session({ database: "neo4j" });
     const parameters = {
@@ -348,7 +347,6 @@ class DB {
 
   async createGroup(groupId, groupName, user1Email) {
     const session = this.localDriver.session({ database: "neo4j" });
-
     try {
       const writeQuery = `CREATE (g:Group {id: $groupId, groupName: $groupName})
                           WITH g

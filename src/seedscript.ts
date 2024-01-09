@@ -1,5 +1,7 @@
 import DB from './utils/db.js'
 import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from 'uuid';
+import axios from "axios";
 
 const db = DB.getInstance()
 
@@ -81,6 +83,16 @@ const createFriendRequests = async () => {
     } catch (error) { return error }
 }
 
+const createGroups = async () => {
+    try {
+        const id = uuidv4()
+        await Promise.all([ axios.post(`${process.env.STORAGE_SERVICE_URL}/api/v1/groups/createGroup`, {groupName: `NYU-bros-${id}`}),
+            db.createGroup(`NYU-bros-${id}`, `NYU-bros-${id}`, "fmash@gmail.com"),
+        ])
+        return `Group NYU-bros-${id} created successfully` 
+    } catch (error) { return error }
+}
+
 
 const script = async () => {
     try {
@@ -91,8 +103,11 @@ const script = async () => {
         console.log(createUsersResponse)
         const createFriendshipsResponse = await createFriendships()
         console.log(createFriendshipsResponse)
-        // const createFriendReqResponse = await createFriendRequests()
-        // console.log(createFriendReqResponse)
+        const createFriendReqResponse = await createFriendRequests()
+        console.log(createFriendReqResponse)
+        const createGroupResponse = await createGroups()
+        console.log(createGroupResponse)
+
     } catch (err) {
         console.log(err)
     }
