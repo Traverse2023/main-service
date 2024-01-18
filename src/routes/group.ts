@@ -59,7 +59,7 @@ const groupsRouter = (groupsNamespace, userController) => {
                 time: (new Date).toISOString()
             }
 
-            // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
+            sendMessageSQS({...messageInfo, groupId, channelName: "general"})
 
             groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
             const activeUsers = await groupsNamespace.fetchSockets();
@@ -95,7 +95,7 @@ const groupsRouter = (groupsNamespace, userController) => {
                     groupId: groupId,
                     groupName: groupName,
                     message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
-                    notificationType: "MESSAGE_SENT"
+                    notificationType: "channelMessage"
                 }
                 console.log('86 sending to', userSocket.handshake.query.email, notification)
                 userSocket.emit('globalNotification', notification)
