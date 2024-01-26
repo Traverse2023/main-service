@@ -1,8 +1,10 @@
-import express, {Router, Request, Response} from 'express'
+import express, {Router, Request, Response, response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 import moment from "moment";
 import {sendMessageSQS} from "../utils/spring-boot-jobs.js";
+import axios from "axios";
+import {log} from "util";
 
 const router = Router()
 
@@ -56,8 +58,11 @@ const groupsRouter = (groupsNamespace) => {
                 lastName: message_info.lastName,
                 time: (new Date).toISOString()
             }
-            sendMessageSQS({...messageInfo, groupId, channelName: "general"})
-            groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
+            axios.post("http://localhost:8080/api/v1/messages/addMessage", {...messageInfo, groupId, channelName: "general"}).then(response => {
+                console.log(response)
+                groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
+            }).catch(err => console.log(response))
+            // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
         })
 
     });
