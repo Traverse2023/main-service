@@ -1,4 +1,4 @@
-import { driver, auth, Session } from "neo4j-driver";
+import { driver, auth, Session, Integer } from "neo4j-driver";
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -15,17 +15,28 @@ interface DB {
 }
 
 class DB {
-  constructor() {
+  // Single instance of DB
+  private static instance: DB;
+
+  private constructor() {
     this.localDriver = driver(uri, auth.basic(user, password), {
       disableLosslessIntegers: true,
     });
+  }
+
+  // To get instance of DB. Will always result in the same DB instance being returned
+  public static getInstance(): DB {
+    if (!DB.instance) {
+      DB.instance = new DB();
+    }
+    return DB.instance;
   }
 
   async clear() {
     const session : Session = this.localDriver.session({ database: "neo4j" });
 
     try {
-      const result = await session.writeTransaction(async (tx) => {
+      const result = await session.executeWrite(async (tx) => {
         // Cypher query to delete all nodes and relationships
         const query = 'MATCH (n) DETACH DELETE n';
         return await tx.run(query);
@@ -58,16 +69,41 @@ class DB {
       await session.close();
     }
   }
-  async createUser({ firstName, lastName, email, password }) {
+
+  async savePFP(user1Email, pfpURL) {
+    console.log('savePFP', user1Email, pfpURL)
+    const session : Session = this.localDriver.session({ database: "neo4j" });
+    try {
+      const writeQuery = `MERGE (u:User {email: $user1Email})
+                                                    SET u.pfpURL = $pfpURL
+                                                    RETURN u`;
+
+      const writeResult = await session.executeWrite((tx) =>
+          tx.run(writeQuery, { user1Email, pfpURL })
+      );
+
+      writeResult.records.forEach((record) => {
+        const updatedUser = record.get("u");
+      });
+    } catch (error) {
+      console.error(`Something went wrong: ${error}`);
+    } finally {
+      await session.close();
+    }
+  }
+
+
+  async createUser({ firstName, lastName, email, password, pfpURL="https://traverse-profile-pics.s3.amazonaws.com/pfps/blank-pfp.png" }) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
       const writeQuery = `CREATE (u:User { firstName: $firstName,
                                                  lastName: $lastName,
                                                  email: $email,
-                                                 password: $password})`;
+                                                 password: $password,
+                                                 pfpURL: $pfpURL})`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { firstName, lastName, email, password })
+        tx.run(writeQuery, { firstName, lastName, email, password, pfpURL })
       );
 
       writeResult.records.forEach((record) => {
@@ -93,6 +129,7 @@ class DB {
         );
 
         readResult.records.forEach((record) => {
+          // console.log('findUserDB', record.get("user").properties)
           res(record.get("user").properties);
         });
         res({})
@@ -251,7 +288,7 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User) [1,2,3,4,6]
+        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User)
                                     WHERE (f)-[:FRIENDS]-(:User {email: $user2Email}) 
                                     RETURN DISTINCT f`;
 

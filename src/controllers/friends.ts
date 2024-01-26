@@ -11,7 +11,7 @@ const addFriend = (req: Request, res: Response) => {
 const sendFriendRequest = async (req: Request, res: Response, next: NextFunction) => {
   const { user1Email, user2Email } = req.body;
 
-const db = new DB()
+const db = DB.getInstance()
   try {
       const value = await db.createFriendRequest(user1Email, user2Email);
       res.json(value);
@@ -28,7 +28,7 @@ const acceptFriendRequest = async (
 ) => {
   const { user1Email, user2Email } = req.body;
 
-  const db = new DB()
+  const db = DB.getInstance()
   try {
   const value = await db.createFriendship(user1Email, user2Email);
   res.json(value);
@@ -42,7 +42,7 @@ const acceptFriendRequest = async (
 const getFriendRequests = async (req: Request, res: Response, next: NextFunction) => {
   const { userEmail } = req.params;
 
-  const db = new DB();
+  const db = DB.getInstance()
   try {
     const requests = await db.getFriendRequests(userEmail)
     res.json(requests)
@@ -52,7 +52,7 @@ const getFriendRequests = async (req: Request, res: Response, next: NextFunction
 
 const getFriends = async (req: Request, res: Response, next: NextFunction) => {
   const { user1Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const friends = await db.getFriends(user1Email)
     res.json(friends)
@@ -61,7 +61,7 @@ const getFriends = async (req: Request, res: Response, next: NextFunction) => {
 
 const getMutualFriends = async (req: Request, res: Response, next: NextFunction) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const mutualFriends = await db.getMutualFriends(user1Email, user2Email)
     res.json(mutualFriends)
@@ -74,7 +74,7 @@ const getFriendshipStatus = async (
   next: NextFunction
   ) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const friendshipStatus = await db.getFriendshipStatus(user1Email, user2Email)
     res.json(friendshipStatus)
@@ -87,7 +87,7 @@ const removeFriendRequest = async(
   next: NextFunction
   ) => {
   const { user1Email, user2Email } = req.params;
-  const db = new DB()
+  const db = DB.getInstance()
   try {
     const value = await db.removeFriendRequest(user1Email, user2Email)
     res.json(value)
@@ -109,9 +109,16 @@ class FriendsController {
     // console.log(this.userSockets.keys())
   }
 
+  sendGlobalNotification(recipientSocket, notification) {
+
+    console.log(notification, recipientSocket);
+
+    recipientSocket.emit('globalNotification', notification)
+  }
+
   async sendFriendRequest(senderEmail, recipientEmail) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    const db = DB.getInstance()
     try {
       const value = await db.createFriendRequest(senderEmail, recipientEmail);
       if (recipientSocket) {
@@ -128,7 +135,7 @@ class FriendsController {
 
   async acceptFriendRequest(senderEmail, recipientEmail) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    const db = DB.getInstance()
     try {
       const value = await db.createFriendship(senderEmail, recipientEmail);
       if (recipientSocket) {
@@ -145,21 +152,28 @@ class FriendsController {
 
   async declineFriendRequest(senderEmail, recipientEmail) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    const db = DB.getInstance()
     try {
       const value = await db.removeFriendRequest(senderEmail, recipientEmail)
-      recipientSocket.emit('receiveDeclineFriendRequest', senderEmail)
+      if (recipientSocket) {
+        recipientSocket.emit('receiveDeclineFriendRequest', senderEmail)
+      }
     } catch(error) {
       throw new HttpError(error, 400)
     }
   }
 
   async unfriend(senderEmail, recipientEmail) {
+    console.log("inunfriendController")
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = new DB()
+    console.log(recipientSocket)
+    const db = DB.getInstance()
     try {
       const value = await db.unfriend(senderEmail, recipientEmail)
-      recipientSocket.emit('receiveUnfriendNotification', senderEmail)
+      console.log('value', value)
+      if (recipientSocket) {
+        recipientSocket.emit('receiveUnfriendNotification', senderEmail)
+      }
     } catch(error) {
       throw new HttpError(error, 400)
     }

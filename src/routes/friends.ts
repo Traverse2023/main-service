@@ -34,6 +34,14 @@ const friendsRouter = (friendsNamespace) => {
     friendsNamespace.on('connection', (socket) => {
         const email = socket.handshake.query.email
         friendsController.registerSocket(email, socket)
+        console.log('36friendsconnection', email)
+
+
+        socket.on('disconnect', () => {
+            const disconnectingUserEmail = socket.handshake.query.email
+            // friendsController.getUserSockets().delete(disconnectingUserEmail, socket)
+            console.log(`Disconnecting user ${disconnectingUserEmail}`)
+        })
 
         socket.on("connect_error", (err) => {
             console.log(`connect_error due to ${err.message}`);
@@ -66,6 +74,7 @@ const friendsRouter = (friendsNamespace) => {
         });
 
     });
+    return friendsController
 };
 
 export { friendsRouter, router }
