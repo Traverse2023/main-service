@@ -43,8 +43,8 @@ const groupsRouter = (groupsNamespace, userController) => {
             socket.leaveAll()
             groupsController.deleteSocket(email)
             socket.join(groupId)
-            const joinMsg = email + " read"
-            groupsNamespace.to(groupId).emit('receiveMessage', joinMsg)
+            // const joinMsg = email + " read"
+            // groupsNamespace.to(groupId).emit('receiveMessage', joinMsg)
             // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
