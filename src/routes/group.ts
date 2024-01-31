@@ -1,9 +1,9 @@
-import express, {Router, Request, Response} from 'express'
+import express, {Router, Request, Response, response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 import {sendMessageSQS} from "../utils/spring-boot-jobs.js";
 import StorageService from '../utils/storage-service.js';
-
+import axios from "axios";
 
 const router = Router()
 
@@ -59,47 +59,53 @@ const groupsRouter = (groupsNamespace, userController) => {
                 time: (new Date).toISOString()
             }
 
-            sendMessageSQS({...messageInfo, groupId, channelName: "general"})
+            // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
+            axios.post("http://localhost:8080/api/v1/messages/addMessage", {...messageInfo, groupId, channelName: "general"}).then(async response => {
+                console.log(response)
+                groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
+                const activeUsers = await groupsNamespace.fetchSockets();
+                console.log('activeUsers', activeUsers.length)
+                // Users
+                const groupMembers = message_info.members;
+                // sockets of users actively in group-chat
+                const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
+                // Members of group not in chat: in another page or not logged in
+                const membersNotInChat = groupMembers.filter(member => !activeMembersInChat.some(
+                    i => i.handshake.query.email === member.email));
 
-            groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
-            const activeUsers = await groupsNamespace.fetchSockets();
-            console.log('activeUsers', activeUsers.length)
-            // Users
-            const groupMembers = message_info.members;
-            // sockets of users actively in group-chat
-            const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
-            // Members of group not in chat: in another page or not logged in
-            const membersNotInChat = groupMembers.filter(member => !activeMembersInChat.some(
-                i => i.handshake.query.email === member.email));
-            
-            const storageService = StorageService.getInstance();
-            
-            membersNotInChat.forEach(async member => {
-                const notification = {
-                    recipientEmail: member.email,
-                    groupId: groupId,
-                    groupName: groupName,
-                    message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
-                    notificationType: "MESSAGE_SENT"
-                }
-                console.log('Sending notification', notification)
-                await StorageService.getInstance().createNotification(notification)
-            })
-            // Members of group chat active but not in chat
-            const activeMembersNotInChat = activeUsers.filter(activeUser => membersNotInChat.some(
-                member => member.email === activeUser.handshake.query.email));
-            
-            activeMembersNotInChat.forEach(userSocket => {
-                const notification = {
-                    recipientEmail: userSocket.handshake.query.email,
-                    groupId: groupId,
-                    groupName: groupName,
-                    message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
-                    notificationType: "channelMessage"
-                }
-                console.log('86 sending to', userSocket.handshake.query.email, notification)
-                userSocket.emit('globalNotification', notification)
-            })
+                const storageService = StorageService.getInstance();
+
+                membersNotInChat.forEach(member => {
+
+                    const notification = {
+                        recipientEmail: member.email,
+                        groupId: groupId,
+                        groupName: groupName,
+                        message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
+                        notificationType: "MESSAGE_SENT"
+                    }
+
+                    console.log('Sending notification', notification)
+                    StorageService.getInstance().createNotification(notification).then(res => {
+                        console.log(res)
+                    })
+                })
+                // Members of group chat active but not in chat
+                const activeMembersNotInChat = activeUsers.filter(activeUser => membersNotInChat.some(
+                    member => member.email === activeUser.handshake.query.email));
+
+                activeMembersNotInChat.forEach(userSocket => {
+                    const notification = {
+                        recipientEmail: userSocket.handshake.query.email,
+                        groupId: groupId,
+                        groupName: groupName,
+                        message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
+                        notificationType: "MESSAGE_SENT"
+                    }
+                    console.log('86 sending to', userSocket.handshake.query.email, notification)
+                    userSocket.emit('globalNotification', notification)
+                })
+            }).catch(err => console.log(response))
         })
 
     });
