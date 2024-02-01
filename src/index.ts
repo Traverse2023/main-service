@@ -63,7 +63,7 @@ const friendsNamespace = io.of('/friends');
 const friendsController = friendsRouter(friendsNamespace)
 
 const groupsNamespace = io.of('/groups');
-groupsRouter(groupsNamespace, friendsController)
+groupsRouter(groupsNamespace)
 
 const notificationsNamespace = io.of('/notifications');
 // notificationRouter(notificationsNamespace)
