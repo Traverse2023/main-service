@@ -18,7 +18,7 @@ class StorageService {
     }
 
     async createGroup(groupName) {
-        console.log(`Group URL: ${process.env.STORAGE_SERVICE_URL+StorageService.groupsURI}`)
+        console.log(`Group URL: ${StorageService.groupsURI}`)
         const res = await axios.post(StorageService.groupsURI, {groupName});
         console.log(res.data);
         return res;
