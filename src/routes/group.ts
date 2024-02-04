@@ -1,11 +1,11 @@
-import express, {Router, Request, Response, response} from 'express'
+import {Router, response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
-import {sendMessageSQS} from "../utils/spring-boot-jobs.js";
 import StorageService from '../utils/storage-service.js';
-import axios from "axios";
+
 
 const router = Router()
+const storageService: StorageService = StorageService.getInstance();
 
 router.use(checkAuth)
 
@@ -17,7 +17,7 @@ router.get('/getMembers/:groupId', getMembers)
 
 router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers)
 
-const groupsRouter = (groupsNamespace, userController) => {
+const groupsRouter = (groupsNamespace) => {
     const groupsController = new GroupsController(groupsNamespace);
 
     groupsNamespace.on('connection', (socket) => {
@@ -43,8 +43,8 @@ const groupsRouter = (groupsNamespace, userController) => {
             socket.leaveAll()
             groupsController.deleteSocket(email)
             socket.join(groupId)
-            const joinMsg = email + " read"
-            groupsNamespace.to(groupId).emit('receiveMessage', joinMsg)
+            // const joinMsg = email + " read"
+            // groupsNamespace.to(groupId).emit('receiveMessage', joinMsg)
             // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
@@ -52,15 +52,18 @@ const groupsRouter = (groupsNamespace, userController) => {
             const groupName = message_info.groupName;
             const messageInfo = {
                 email,
+                channelName: message_info.channelName,
+                groupId: groupId,
                 text: message_info.msg,
                 firstName: message_info.firstName,
                 lastName: message_info.lastName,
                 pfpURL: message_info.pfpURL,
                 time: (new Date).toISOString()
             }
+            console.log(`Creating message: {}`, messageInfo)
+
             // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
-            axios.post("http://localhost:8080/api/v1/messages/addMessage", {...messageInfo, groupId, channelName: "general"}).then(async response => {
-                console.log(response)
+           storageService.createMessage(messageInfo).then(async response => {
                 groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
                 const activeUsers = await groupsNamespace.fetchSockets();
                 console.log('activeUsers', activeUsers.length)
@@ -74,7 +77,8 @@ const groupsRouter = (groupsNamespace, userController) => {
 
                 const storageService = StorageService.getInstance();
 
-                membersNotInChat.forEach(async member => {
+                membersNotInChat.forEach(member => {
+
                     const notification = {
                         recipientEmail: member.email,
                         groupId: groupId,
@@ -82,8 +86,11 @@ const groupsRouter = (groupsNamespace, userController) => {
                         message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
                         notificationType: "MESSAGE_SENT"
                     }
+
                     console.log('Sending notification', notification)
-                    await StorageService.getInstance().createNotification(notification)
+                    StorageService.getInstance().createNotification(notification).then(res => {
+                        console.log(res)
+                    })
                 })
                 // Members of group chat active but not in chat
                 const activeMembersNotInChat = activeUsers.filter(activeUser => membersNotInChat.some(
