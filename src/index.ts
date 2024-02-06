@@ -69,5 +69,5 @@ const notificationsNamespace = io.of('/notifications');
 // notificationRouter(notificationsNamespace)
 
 server.listen(PORT, () => {
-    console.log(`Server on ${PORT}`);
+    console.log(`Server on ${PORT}...`);
 })
