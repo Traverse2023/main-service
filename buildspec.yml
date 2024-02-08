@@ -3,17 +3,21 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: latest
+      docker: latest
+  pre_build:
     commands:
-      - npm install -g typescript
-      - npm install
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --no-include-email --region us-east-1)
   build:
     commands:
-      - tsc
-      - npm test
+      - echo Building Docker image...
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag main-service-ecr:latest 816867951976.dkr.ecr.us-east-1.amazonaws.com/main-service-ecr:latest
+  post_build:
+    commands:
+      - echo Pushing Docker image to Amazon ECR...
+      - docker push 816867951976.dkr.ecr.us-east-1.amazonaws.com/main-service-ecr:latest
 
 artifacts:
   files:
-    - package.json
-    - package-lock.json
-    - 'dist/**/*'
+    - '**/*'
