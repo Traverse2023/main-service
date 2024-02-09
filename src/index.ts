@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 })
 
 app.get("/", (req, res) => {
+  console.log("Invoking health endpoint")
   res.send("Healthy")
 })
 
