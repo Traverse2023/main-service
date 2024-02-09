@@ -5,15 +5,19 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 816867951976.dkr.ecr.us-east-1.amazonaws.com/main-service-ecr
+      - REPOSITORY_URI=816867951976.dkr.ecr.us-east-1.amazonaws.com/main-service-ecr
+      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:
       - echo Building Docker image...
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
-      - docker tag main-service-ecr:latest 816867951976.dkr.ecr.us-east-1.amazonaws.com/main-service-ecr:latest
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo Pushing Docker image to Amazon ECR...
-      - docker push 816867951976.dkr.ecr.us-east-1.amazonaws.com/main-service-ecr:latest
+      - echo Build completed on `date`
+      - echo pushing to repo
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
 
 artifacts:
   files:
