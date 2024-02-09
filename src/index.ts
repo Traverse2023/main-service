@@ -32,6 +32,10 @@ app.use((req, res, next) => {
   next()
 })
 
+app.get("/", (req, res) => {
+  res.send("Healthy")
+})
+
 app.use("/api/auth", authRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/group", groupRoutes)
