@@ -84,7 +84,7 @@ const groupsRouter = (groupsNamespace) => {
                         groupId: groupId,
                         groupName: groupName,
                         message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
-                        notificationType: "MESSAGE_SENT"
+                        notificationType: "messageSent"
                     }
 
                     console.log('Sending notification', notification)
@@ -102,7 +102,7 @@ const groupsRouter = (groupsNamespace) => {
                         groupId: groupId,
                         groupName: groupName,
                         message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
-                        notificationType: "MESSAGE_SENT"
+                        notificationType: "messageSent"
                     }
                     console.log('86 sending to', userSocket.handshake.query.email, notification)
                     userSocket.emit('globalNotification', notification)
