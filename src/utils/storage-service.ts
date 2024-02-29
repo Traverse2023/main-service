@@ -10,7 +10,7 @@ class StorageService {
 
 
     public static getInstance() {
-        console.log("storage-service instance: {}", this.baseURL);
+        console.log("storage-service instance: ", this.baseURL);
         if (!StorageService.instance) {
             this.instance = new StorageService();
         }

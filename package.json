@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -r dist",
-    "start": "node dist/seedscript.js && node dist/swagger.js && node dist/index.js",
+    "seedscript": "node dist/seedscript.js",
+    "start": "node dist/swagger.js && node dist/index.js",
     "dev": "npm run build && npm start",
     "watch": "nodemon --watch src -=-ext ts --exec \"npm run dev\"",
     "test": "ava"

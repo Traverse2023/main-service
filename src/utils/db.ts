@@ -346,7 +346,7 @@ class DB {
     })
   }
 
-  async createGroup(groupId, groupName, user1Email) {
+  async createGroup(groupId: String, groupName: String, userEmail: String) {
     const session = this.localDriver.session({ database: "neo4j" });
 
     try {
@@ -356,7 +356,7 @@ class DB {
                           CREATE (g)<-[:MEMBER]-(u)`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { groupId, groupName, user1Email })
+        tx.run(writeQuery, { groupId, groupName, user1Email: userEmail })
       );
 
       writeResult.records.forEach((record) => {
@@ -444,7 +444,7 @@ class DB {
     });
   }
 
-  async addMemberToGroup(user1Email, groupId) {
+  async addMemberToGroup(user1Email: String, groupId: String) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
@@ -457,6 +457,7 @@ class DB {
         const writeResult = await session.executeWrite((tx) =>
             tx.run(writeQuery, { user1Email, groupId })
         );
+        results.push(writeResult.records);
       } catch (err) {
         reject(err);
       } finally {
