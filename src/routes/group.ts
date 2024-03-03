@@ -2,6 +2,7 @@ import {Router, response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 import StorageService from '../utils/storage-service.js';
+import {NotificationController} from "../controllers/notification.js";
 
 
 const router = Router()
@@ -17,8 +18,10 @@ router.get('/getMembers/:groupId', getMembers)
 
 router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers)
 
-const groupsRouter = (groupsNamespace) => {
+const groupsRouter = (groupsNamespace, notificationsNamespace) => {
     const groupsController = new GroupsController(groupsNamespace);
+
+    const notificationController = new NotificationController(notificationsNamespace)
 
     groupsNamespace.on('connection', (socket) => {
         const email = socket.handshake.query.email
@@ -38,7 +41,7 @@ const groupsRouter = (groupsNamespace) => {
         });
 
         //join room
-        socket.on("joinRoom", ( groupId ) => {
+        socket.on("joinRoom", (groupId) => {
             console.log("37", email, "joined", groupId)
             socket.leaveAll()
             groupsController.deleteSocket(email)
@@ -63,7 +66,7 @@ const groupsRouter = (groupsNamespace) => {
             console.log(`Creating message: {}`, messageInfo)
 
             // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
-           storageService.createMessage(messageInfo).then(async response => {
+            storageService.createMessage(messageInfo).then(async response => {
                 groupsNamespace.to(groupId).emit('receiveMessage', messageInfo)
                 const activeUsers = await groupsNamespace.fetchSockets();
                 console.log('activeUsers', activeUsers.length)
@@ -76,41 +79,36 @@ const groupsRouter = (groupsNamespace) => {
                     i => i.handshake.query.email === member.email));
 
                 const storageService = StorageService.getInstance();
+                const logMembersNotInChat = membersNotInChat.map(member => member.email);
+                console.log(`Members not in chat: ${logMembersNotInChat}`);
 
-                membersNotInChat.forEach(member => {
 
-                    const notification = {
-                        recipientEmail: member.email,
-                        groupId: groupId,
-                        groupName: groupName,
-                        message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
-                        notificationType: "messageSent"
-                    }
+                const notificationPromises = membersNotInChat.map(member => {
+                    return notificationController.createNotification(
+                        messageInfo.email,
+                        member.email,
+                        groupId,
+                        groupName,
+                        messageInfo,
+                        "messageSent"
+                    );
+                });
 
-                    console.log('Sending notification', notification)
-                    StorageService.getInstance().createNotification(notification).then(res => {
-                        console.log(res)
-                    })
-                })
-                // Members of group chat active but not in chat
+                await Promise.all(notificationPromises);
+
+
+                // Get members of group chat active but not in chat
                 const activeMembersNotInChat = activeUsers.filter(activeUser => membersNotInChat.some(
                     member => member.email === activeUser.handshake.query.email));
 
                 activeMembersNotInChat.forEach(userSocket => {
-                    const notification = {
-                        recipientEmail: userSocket.handshake.query.email,
-                        groupId: groupId,
-                        groupName: groupName,
-                        message: `${message_info.firstName} ${message_info.lastName} sent a message to ${groupName}.`,
-                        notificationType: "messageSent"
-                    }
-                    console.log('86 sending to', userSocket.handshake.query.email, notification)
-                    userSocket.emit('globalNotification', notification)
+                    notificationController.sendNotification(messageInfo.email, userSocket, groupId, groupName, messageInfo, "messageSent");
                 })
-            }).catch(err => console.log(response))
-        })
 
-    });
-};
+            }).catch(err => console.log(response));
+
+        });
+    })
+}
 
 export { router, groupsRouter }

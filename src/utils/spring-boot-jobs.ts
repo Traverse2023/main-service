@@ -7,7 +7,7 @@ export const sendMessageSQS = ({pfpURL, text, email, groupId, channelName, first
         console.log("====Sending sendMsgSQS to SQS====")
         const client = new SQSClient({ region: "us-east-1" });
         const params = {
-          MessageBody: JSON.stringify({ pfpURL, firstName, lastName, time, text, email ,groupId, channelName}),
+          MessageBody: JSON.stringify({ pfpURL, firstName, lastName, time, message: text, email ,groupId, channelName}),
           QueueUrl: process.env.SQS_QUEUE_URL,
           MessageGroupId: `sendMsg`,
           MessageDeduplicationId: `sendMsg-${uuidv4()}`

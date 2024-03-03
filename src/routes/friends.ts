@@ -28,7 +28,7 @@ router.get('/removeFriendRequest/:user1Email/:user2Email', removeFriendRequest)
 // router.post('/sendFriendRequest', sendFriendRequest)
 router.post('/acceptFriendRequest', acceptFriendRequest)
 
-const friendsRouter = (friendsNamespace) => {
+const friendsRouter = (friendsNamespace, notificationsNamespace) => {
     const friendsController = new FriendsController(friendsNamespace);
 
     friendsNamespace.on('connection', (socket) => {

@@ -9,6 +9,7 @@ import {groupsRouter, router as groupRoutes} from './routes/group.js'
 
 
 
+
 //import {setup, serve} from 'swagger-ui-express'
 //import swaggerFile from './swagger_output.json' assert {type: "json"}
 import * as http from "http";
@@ -64,14 +65,15 @@ const io = new Server(server, {
   }
 });
 
+const notificationsNamespace = io.of('/notifications');
+
+
 const friendsNamespace = io.of('/friends');
-const friendsController = friendsRouter(friendsNamespace)
+friendsRouter(friendsNamespace, notificationsNamespace)
 
 const groupsNamespace = io.of('/groups');
-groupsRouter(groupsNamespace)
+groupsRouter(groupsNamespace, notificationsNamespace)
 
-const notificationsNamespace = io.of('/notifications');
-// notificationRouter(notificationsNamespace)
 
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}... 26`);
