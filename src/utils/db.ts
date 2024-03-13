@@ -1,5 +1,8 @@
 import { driver, auth, Session, Integer } from "neo4j-driver";
 import dotenv from 'dotenv'
+import { promiseHooks } from "v8";
+import { resolve } from "path";
+import { rejects } from "assert";
 dotenv.config()
 
 const uri = process.env.NEO4J_URI;
@@ -346,8 +349,14 @@ class DB {
     })
   }
 
-  async createGroup(groupId, groupName, user1Email) {
+  async createGroup(groupId: Integer, groupName: String, user1Email: String) {
     const session = this.localDriver.session({ database: "neo4j" });
+
+    // Currently initializes channels when a group is created
+    // TODO: Replace this with code to add channels through the add channel button
+    this.createChannel(groupId.toString() + "general", groupId)
+    this.createChannel(groupId.toString() + "announcements", groupId)
+    this.createChannel(groupId.toString() + "events", groupId)
 
     try {
       const writeQuery = `CREATE (g:Group {id: $groupId, groupName: $groupName})
@@ -467,6 +476,55 @@ class DB {
       }
     });
   }
+
+  async createChannel(channelUuid: string, groupId: Integer) {
+    const session = this.localDriver.session({ database: "neo4j" });
+
+    try {
+      const writeQuery = ``;
+
+      const writeResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery, { channelUuid, groupId })
+      );
+
+      writeResult.records.forEach((record) => {
+        const createdGroup = record.get("g");
+        console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
+      });
+      // await sendCreateGroupJob(groupName, user1Email)
+    } catch (error) {
+      console.error(`Something went wrong: ${error}`);
+    } finally {
+      await session.close();
+    }
+  }
+
+  async joinRoom(userEmail: String, groupId: Integer, channelUuid: String) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (u:User {email: $user1Email})
+        MATCH (g:Group {id:$groupId})
+        MATCH (c:Channel {uuid: $channelUuid})
+        MERGE (u)-[r:MEMBER]->(c)
+        RETURN u, c`;
+
+        const writeResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery, { userEmail, channelUuid })
+        );
+
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        // console.log("178", results);
+
+        resolve(results);
+      }
+    })
+  }
+
 }
 
 export default DB;
