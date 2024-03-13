@@ -48,6 +48,16 @@ const groupsRouter = (groupsNamespace) => {
             // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
+        socket.on("joinCall", ( member, groupObj, channelName ) => {
+            console.log("52", email, "joinedCall", groupObj.groupId, channelName)
+            const targetRoom = groupsNamespace.in(groupObj.groupId);
+            const roomListeners = targetRoom.adapter.rooms.get(groupObj.groupId);
+            console.log('joinCalllisteneers', roomListeners)
+            groupsNamespace.to(groupObj.groupId).emit('joinCallListener', member, channelName)
+            console.log("after receiveJoinCall emit")
+            // socket.to(groupId).emit('joinMessage', joinMsg)
+        })
+
         socket.on("sendMessage", async (groupId, message_info) => {
             const groupName = message_info.groupName;
             const messageInfo = {
