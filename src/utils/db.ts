@@ -349,7 +349,7 @@ class DB {
     })
   }
 
-  async createGroup(groupId: Integer, groupName: String, user1Email: String) {
+  async createGroup(groupId: String, groupName: String, user1Email: String) {
     const session = this.localDriver.session({ database: "neo4j" });
 
     // Currently initializes channels when a group is created
@@ -477,14 +477,15 @@ class DB {
     });
   }
 
-  async createChannel(channelUuid: string, groupId: Integer) {
+  // Creates a channel node and links it the the parent group
+  async createChannel(channelUuid: String, groupId: String) {
     const session = this.localDriver.session({ database: "neo4j" });
 
     try {
-      const writeQuery = ``;
+      const writeQuery = `CREATE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId})`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { channelUuid, groupId })
+        tx.run(writeQuery, { groupId, channelUuid })
       );
 
       writeResult.records.forEach((record) => {
@@ -499,13 +500,36 @@ class DB {
     }
   }
 
-  async joinRoom(userEmail: String, groupId: Integer, channelUuid: String) {
+  // Creates a channel node and links it the the parent group
+  async deleteChannel(channelUuid: string, groupId: Integer) {
+    const session = this.localDriver.session({ database: "neo4j" });
+
+    try {
+      const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId}) DETACH DELETE c`;
+
+      const writeResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery, { groupId, channelUuid })
+      );
+
+      writeResult.records.forEach((record) => {
+        const createdGroup = record.get("g");
+        console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
+      });
+      // await sendCreateGroupJob(groupName, user1Email)
+    } catch (error) {
+      console.error(`Something went wrong: ${error}`);
+    } finally {
+      await session.close();
+    }
+  }
+
+  // Saves when user joins a channel to neo4j, links user's node to channel when user joins
+  async joinChannel(userEmail: String, channelUuid: String) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
         const writeQuery = `MATCH (u:User {email: $user1Email})
-        MATCH (g:Group {id:$groupId})
         MATCH (c:Channel {uuid: $channelUuid})
         MERGE (u)-[r:MEMBER]->(c)
         RETURN u, c`;
@@ -525,6 +549,35 @@ class DB {
     })
   }
 
+  // Removes user's link to channel when user leaves a channel
+  async leaveChannel(userEmail: String, channelUuid: String) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (u:User {email: $user1Email})
+        MATCH (c:Channel {uuid: $channelUuid})
+        MATCH (u)-[r:MEMBER]->(c)
+        DELETE r
+        RETURN u, c`;
+
+        const writeResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery, { userEmail, channelUuid })
+        );
+
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        // console.log("178", results);
+
+        resolve(results);
+      }
+    })
+  }
 }
+
+
+
 
 export default DB;
