@@ -482,16 +482,15 @@ class DB {
     const session = this.localDriver.session({ database: "neo4j" });
 
     try {
-      const writeQuery = `CREATE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId})`;
+      const writeQuery = `MATCH (g:Group {id: $groupId})
+      MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g)`;
 
       const writeResult = await session.executeWrite((tx) =>
         tx.run(writeQuery, { groupId, channelUuid })
       );
 
-      writeResult.records.forEach((record) => {
-        const createdGroup = record.get("g");
-        console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
-      });
+      console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
+
       // await sendCreateGroupJob(groupName, user1Email)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
@@ -505,16 +504,14 @@ class DB {
     const session = this.localDriver.session({ database: "neo4j" });
 
     try {
-      const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId}) DETACH DELETE c`;
+      const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId}) 
+      DETACH DELETE c`;
 
       const writeResult = await session.executeWrite((tx) =>
         tx.run(writeQuery, { groupId, channelUuid })
       );
+      console.log("DELETED CHANNEL FOR: ", groupId, "<-", channelUuid);
 
-      writeResult.records.forEach((record) => {
-        const createdGroup = record.get("g");
-        console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
-      });
       // await sendCreateGroupJob(groupName, user1Email)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
