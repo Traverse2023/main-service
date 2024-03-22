@@ -19,33 +19,33 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
   };
 
 
-  const getGroups = (req: Request, res: Response, next: NextFunction) => {
+const getGroups = (req: Request, res: Response, next: NextFunction) => {
     const { user1Email } = req.params;
-  
+
     const db = DB.getInstance();
     db.getGroups(user1Email)
-      .then((value) => {
-          console.log('getGroupController', value)
+        .then((value) => {
+            console.log('getGroupController', value)
         res.json(value);
-      })
-      .catch((err) => {
+        })
+        .catch((err) => {
         throw new HttpError(err, 400);
-      });
-  };
+        });
+};
 
 
-  const getMembers = (req: Request, res: Response, next: NextFunction) => {
-      const { groupId } = req.params;
+const getMembers = (req: Request, res: Response, next: NextFunction) => {
+    const { groupId } = req.params;
 
-      const db = DB.getInstance();
-      db.getMembers(groupId)
-          .then((value) => {
-              res.json(value);
-          })
-          .catch((err) => {
-              throw new HttpError(err, 400);
-          });
-  }
+    const db = DB.getInstance();
+    db.getMembers(groupId)
+        .then((value) => {
+            res.json(value);
+        })
+        .catch((err) => {
+            throw new HttpError(err, 400);
+        });
+}
 
 const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunction) => {
     const { user1Email, groupId } = req.params;
@@ -60,6 +60,12 @@ const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunct
         });
 }
 
+const getUsersInChannel = (req: Request, res: Response, next: NextFunction) => {
+    const { groupId, channelUuid } = req.params;
+
+    const db = DB.getInstance();
+
+};
 
 
 class GroupsController {
@@ -86,6 +92,26 @@ class GroupsController {
         try {
             const value = await db.addMemberToGroup(recipientEmail, groupId);
             groupsNamespace.to(groupId).emit('receiveAddedToGroupNotification', senderEmail, recipientEmail)
+        } catch (err) {
+            console.error(err);
+            throw new HttpError(err, 404);
+        }
+    }
+
+    async addUserToChannel(email: string, groupId: string, channelName: string){
+        const db = DB.getInstance();
+        try {
+            const value = await db.joinChannel(email, groupId+channelName);
+        } catch (err) {
+            console.error(err);
+            throw new HttpError(err, 404);
+        }
+    }
+
+    async disconnectUserFromChannels(email: string) {
+        const db = DB.getInstance();
+        try {
+            const value = await db.leaveAllChannels(email);
         } catch (err) {
             console.error(err);
             throw new HttpError(err, 404);
