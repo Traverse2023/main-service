@@ -1,6 +1,7 @@
 import DB from './utils/db.js'
 import bcrypt from "bcryptjs";
 import StorageService from "./utils/storage-service.js";
+import {randomUUID} from "crypto";
 
 const db = DB.getInstance()
 
@@ -133,18 +134,6 @@ const addUsersToGroup = async (groupId: String) => {
     }
 }
 
-const createStorageGroup = async () => {
-    const groupName: String = "TraverseAdmins";
-    const userEmail: String = "bpalomo@traverse.zone";
-    try{
-        const storageResponse = await storageService.createGroup(groupName);
-        console.log("Group created in storage-service: ", storageResponse.data);
-        return storageResponse.data;
-    } catch (err) {
-        console.log(err);
-    }
-}
-
 const createMainGroup = async (groupName: String, groupUUID: String) => {
     await db.createGroup(groupUUID, groupName, "bpalomo@traverse.zone");
 }
@@ -159,10 +148,10 @@ const script = async () => {
         console.log("Loading seed data...");
         const createUsersResponse = await createUsers();
         console.log(createUsersResponse);
-        const storageResponseData = await createStorageGroup();
-        const { name, id} = storageResponseData;
-        await createMainGroup(name, id);
-        await addUsersToGroup(id);
+        const groupId = randomUUID().toString();
+        const name = "Traverse Admins"
+        await createMainGroup(name, groupId);
+        await addUsersToGroup(groupId);
         console.log("Seed-script executed successfully.");
     } catch (err) {
         console.log("Seed-script failed: ", err);

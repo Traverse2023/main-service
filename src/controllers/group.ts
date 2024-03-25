@@ -2,14 +2,15 @@ import { Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
 import StorageService from "../utils/storage-service.js";
+import {randomUUID} from "crypto";
 
 const createGroup = async (req: Request, res: Response, next: NextFunction) => {
     const { groupName, user1Email } = req.body;
 
-    const storageService = StorageService.getInstance()
-    const storageResponse = await storageService.createGroup(groupName)
+    const groupId: string = randomUUID().toString();
+    console.log(`New group: ${groupId}`);
     const db = DB.getInstance();
-    db.createGroup(storageResponse.data.id, groupName, user1Email)
+    db.createGroup(groupId, groupName, user1Email)
       .then((value) => {
         res.json(value);
       })
