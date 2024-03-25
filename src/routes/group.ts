@@ -74,16 +74,16 @@ const groupsRouter = (groupsNamespace, io) => {
             // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
            storageService.createMessage(message).then(async response => {
                console.log("Created nessage: ", response.data);
-                groupsNamespace.to(groupId).emit('receiveMessage', response.data);
-                const activeUsers = await groupsNamespace.fetchSockets();
-                console.log('activeUsers', activeUsers.length)
+               groupsNamespace.to(groupId).emit('receiveMessage', response.data);
+               const activeUsers = await groupsNamespace.fetchSockets();
+               console.log('activeUsers', activeUsers.length)
                 // Users
-                const groupMembers = message_info.members;
+               const groupMembers = message_info.members;
                 // sockets of users actively in group-chat
-                const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
-                const activeMainNamespace = await io.of("/groups").in(groupId).fetchSockets();
-                activeMainNamespace.forEach(m => console.log(m.id))
-                activeMembersInChat.forEach(m => console.log(m.id))
+               const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
+
+
+
 
                 // Members of group not in this chats page where they can see the messages or not logged in at all
                 // will need a notification created

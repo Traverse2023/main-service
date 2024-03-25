@@ -8,14 +8,11 @@ import {router as userRoutes} from './routes/user.js'
 import {groupsRouter, router as groupRoutes} from './routes/group.js'
 import pkg from 'agora-access-token'
 const { RtcTokenBuilder, RtcRole } = pkg
-import { v4 as uuidv4 } from 'uuid';
-
-//import {setup, serve} from 'swagger-ui-express'
-//import swaggerFile from './swagger_output.json' assert {type: "json"}
 import * as http from "http";
 import {Server} from "socket.io";
 import {friendsRouter} from "./routes/friends.js";
-import {randomUUID} from "crypto";
+import {notificationRouter} from "./routes/notification.js";
+
 
 const app: Express = express()
 
@@ -85,13 +82,13 @@ const io = new Server(server, {
 });
 
 const friendsNamespace = io.of('/friends');
-const friendsController = friendsRouter(friendsNamespace, io)
+friendsRouter(friendsNamespace, io);
 
 const groupsNamespace = io.of('/groups');
-groupsRouter(groupsNamespace, io)
+groupsRouter(groupsNamespace, io);
 
 const notificationsNamespace = io.of('/notifications');
-// notificationRouter(notificationsNamespace)
+notificationRouter(notificationsNamespace, groupsNamespace, io);
 
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}...`);
