@@ -477,72 +477,57 @@ class DB {
     });
   }
   
-  // async getUsersInChannel(channelUuid: String) {
-  //   const session = this.localDriver.session({ database: "neo4j" });
-  //   let results = [];
-
-  //   try {
-  //     const readQuery = `MATCH (c:Channel {channelUuid: $channelUuid})
-  //     MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g)`;
-
-  //     const readResult = await session.executeWrite((tx) =>
-  //       tx.run(readQuery, { channelUuid })
-  //     );
-
-  //     results = readResult.records.map(record => record["_fields"][0].properties)
-
-  //     console.log("FOUND USERS FOR CHANNEL: ", channelUuid, ":", results);
-
-  //   } catch (error) {
-  //     console.error(`Something went wrong: ${error}`);
-  //   } finally {
-  //     await session.close();
-  //     resolve(results);
-  //   } 
-  // }
-
   // Creates a channel node and links it the the parent group
   // channelUuid is groupId+channelName
   async createChannel(channelUuid: String, groupId: String) {
     const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
 
-    try {
-      const writeQuery = `MATCH (g:Group {id: $groupId})
-      MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g)`;
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (g:Group {id: $groupId})
+        MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g)`;
 
-      const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { groupId, channelUuid })
-      );
+        const writeResult = await session.executeWrite((tx) =>
+          tx.run(writeQuery, { groupId, channelUuid })
+        );
 
-      console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
+        console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
 
-      // await sendCreateGroupJob(groupName, user1Email)
-    } catch (error) {
-      console.error(`Something went wrong: ${error}`);
-    } finally {
-      await session.close();
-    }
+        // await sendCreateGroupJob(groupName, user1Email)
+      } catch (error) {
+        console.error(`Something went wrong: ${error}`);
+        reject(error);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    })
   }
 
   // Creates a channel node and links it the the parent group
   async deleteChannel(channelUuid: string, groupId: Integer) {
     const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId}) 
+        DETACH DELETE c`;
 
-    try {
-      const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId}) 
-      DETACH DELETE c`;
+        const writeResult = await session.executeWrite((tx) =>
+          tx.run(writeQuery, { groupId, channelUuid })
+        );
+        console.log("DELETED CHANNEL FOR: ", groupId, "<-", channelUuid);
 
-      const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { groupId, channelUuid })
-      );
-      console.log("DELETED CHANNEL FOR: ", groupId, "<-", channelUuid);
-
-      // await sendCreateGroupJob(groupName, user1Email)
-    } catch (error) {
-      console.error(`Something went wrong: ${error}`);
-    } finally {
-      await session.close();
-    }
+        // await sendCreateGroupJob(groupName, user1Email)
+      } catch (error) {
+        console.error(`Something went wrong: ${error}`);
+        reject(error);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    })
   }
 
   // Saves when user joins a channel to neo4j, links user's node to channel when user joins
@@ -589,11 +574,10 @@ class DB {
         );
 
       } catch (err) {
+        
         reject(err);
       } finally {
         await session.close();
-        // console.log("178", results);
-
         resolve(results);
       }
     })
@@ -616,18 +600,15 @@ class DB {
           );
   
         } catch (err) {
+          console.log("leaveAllChannels FAILED", userEmail);
           reject(err);
         } finally {
           await session.close();
-          // console.log("178", results);
-  
           resolve(results);
         }
       })
     }
 }
-
-
 
 
 export default DB;

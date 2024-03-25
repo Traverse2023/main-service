@@ -60,14 +60,7 @@ const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunct
         });
 }
 
-const getUsersInChannel = (req: Request, res: Response, next: NextFunction) => {
-    const { groupId, channelUuid } = req.params;
-
-    const db = DB.getInstance();
-
-};
-
-
+// Responsible for handling methods to do with sockets
 class GroupsController {
     private io
     private userSockets

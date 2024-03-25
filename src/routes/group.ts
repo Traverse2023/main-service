@@ -1,5 +1,5 @@
 import {Router, response} from 'express'
-import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers,  GroupsController} from '../controllers/group.js'
+import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 import StorageService from '../utils/storage-service.js';
 
@@ -17,7 +17,6 @@ router.get('/getMembers/:groupId', getMembers)
 
 router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers)
 
-// router.get('/getUsersInChannel/:groupId/:channelUuid')
 
 const groupsRouter = (groupsNamespace) => {
     const groupsController = new GroupsController(groupsNamespace);
