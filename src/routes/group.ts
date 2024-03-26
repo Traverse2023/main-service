@@ -17,7 +17,7 @@ router.get('/getMembers/:groupId', getMembers)
 
 router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers)
 
-const groupsRouter = (groupsNamespace, io) => {
+const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
     const groupsController = new GroupsController(groupsNamespace);
 
     groupsNamespace.on('connection', (socket) => {
@@ -71,27 +71,32 @@ const groupsRouter = (groupsNamespace, io) => {
 
             console.log(`Creating message: `, message)
 
-            // sendMessageSQS({...messageInfo, groupId, channelName: "general"})
-           storageService.createMessage(message).then(async response => {
-               console.log("Created nessage: ", response.data);
-               groupsNamespace.to(groupId).emit('receiveMessage', response.data);
-               const activeUsers = await groupsNamespace.fetchSockets();
-               console.log('activeUsers', activeUsers.length)
-                // Users
-               const groupMembers = message_info.members;
-                // sockets of users actively in group-chat
-               const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
+            // TODO: replace logic with channelId which is roomId#channelName
+            storageService.createMessage(message).then(async response => {
+                console.log("Created and stored message: ", response.data);
+
+                groupsNamespace.to(groupId).emit('receiveMessage', response.data);
+               // All members of chat
+                const groupMembers = message_info.members;
+               // Members of chat who are in chat and seeing live messages
+                const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
+               // Members of chat who are in app
+                const activeMembers = notificationNamespace.in(groupId).fetchSockets();
+                // Members of chat who are in app but no seeing live messages for the chat.
+                // These members need to receive a UI notification
+                const activeMembersNotInChat = activeMembers.filter(member =>
+                    !activeMembersInChat.some(inChat => inChat.handshake.query.email === member.handshake.query.email))
 
 
-
-
-                // Members of group not in this chats page where they can see the messages or not logged in at all
-                // will need a notification created
+                /*  Members of group not in the live chat including the members who are not active in the app.
+                    These members will need a notification created for them. Only members actively in the live
+                    chat do not need a notification created as they are seeing the messages live. */
                 const membersNotInChat = groupMembers.filter(member => !activeMembersInChat.some(
                     i => i.handshake.query.email === member.email));
 
+                // Create a notification object to be stored and retrieved for all members
+                // not in the live chat or not in the app
                 membersNotInChat.forEach(member => {
-
                     const notification = {
                         pk: member.email,
                         chatId: groupId,
@@ -99,18 +104,13 @@ const groupsRouter = (groupsNamespace, io) => {
                         type: "GROUP_MESSAGE"
                     }
 
-                    console.log('Sending notification', notification)
                     storageService.createNotification(notification).then(res => {
                         console.log(res)
                     })
                 })
 
-                // Members of group chat active but not in this chat's page able to view messages
-                const activeMembersNotInChat = activeUsers.filter(activeUser => membersNotInChat.some(
-                    member => member.email === activeUser.handshake.query.email));
-
+                // Send a notification socket event to members who are in app but not in the live chat.
                 activeMembersNotInChat.forEach(userSocket => {
-
                     const notification = {
                         pk: userSocket.handshake.query.email,
                         chatId: groupId,
