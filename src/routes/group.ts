@@ -58,7 +58,7 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
             // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
-        socket.on("sendMessage", async (groupId, message_info) => {
+        socket.on("sendMessage", async (groupId: string, message_info) => {
             const message = {
                 chatId: groupId,
                 type: "GROUP_MESSAGE",
@@ -81,13 +81,16 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
                // Members of chat who are in chat and seeing live messages
                 const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
                // Members of chat who are in app
-                const activeMembers = notificationNamespace.in(groupId).fetchSockets();
+                const activeMembers = await notificationNamespace.in(groupId).fetchSockets();
+
                 // Members of chat who are in app but no seeing live messages for the chat.
                 // These members need to receive a UI notification
                 const activeMembersNotInChat = activeMembers.filter(member =>
                     !activeMembersInChat.some(inChat => inChat.handshake.query.email === member.handshake.query.email))
 
-
+                activeMembersInChat.forEach(m => console.log("InChat", m.handshake.query.email));
+                activeMembers.forEach(m => console.log("Active", m.handshake.query.email));
+                activeMembersNotInChat.forEach(m => console.log("ActiveNotInChat", m.handshake.query.email));
                 /*  Members of group not in the live chat including the members who are not active in the app.
                     These members will need a notification created for them. Only members actively in the live
                     chat do not need a notification created as they are seeing the messages live. */
@@ -105,7 +108,7 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
                     }
 
                     storageService.createNotification(notification).then(res => {
-                        console.log(res)
+                        // console.log(res)
                     })
                 })
 
@@ -120,7 +123,7 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
 
                     console.log('86 sending to', userSocket.handshake.query.email, notification)
                     userSocket.emit('globalNotification', notification);
-                    storageService.createNotification(notification).then(res => {console.log(res)});
+                    storageService.createNotification(notification).then(res => {console.log("\n")});
                 })
             }).catch(err => console.log(err));
         })

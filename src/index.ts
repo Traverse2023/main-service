@@ -11,7 +11,7 @@ const { RtcTokenBuilder, RtcRole } = pkg
 import * as http from "http";
 import {Server} from "socket.io";
 import {friendsRouter} from "./routes/friends.js";
-import {notificationRouter} from "./routes/notification.js";
+import {notificationsRouter} from "./routes/notifications.js";
 
 
 const app: Express = express()
@@ -84,11 +84,13 @@ const io = new Server(server, {
 const friendsNamespace = io.of('/friends');
 friendsRouter(friendsNamespace, io);
 
-const groupsNamespace = io.of('/groups');
-groupsRouter(groupsNamespace, io);
-
 const notificationsNamespace = io.of('/notifications');
-notificationRouter(notificationsNamespace, groupsNamespace, io);
+notificationsRouter(notificationsNamespace);
+const groupsNamespace = io.of('/groups');
+groupsRouter(groupsNamespace, notificationsNamespace, io);
+
+
+
 
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}...`);

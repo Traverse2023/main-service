@@ -91,30 +91,6 @@ const createUsers = async () => {
     }
 }
 
-// const createFriendships = async () => {
-//     try {
-//
-//         const user1Email = "isfaroshir@gmail.com"
-//         const user2Email = "fmash@gmail.com"
-//         const user3Email = "bp@gmail.com"
-//         await db.createFriendship(user1Email, user2Email)
-//         await db.createFriendship(user2Email, user3Email)
-//         return `Created friendship between ${user1Email} and ${user2Email} and ${user3Email} and ${user2Email}`
-//
-//     } catch(error) { return error }
-// }
-
-// const createFriendRequests = async () => {
-//     try {
-//         await Promise.all([
-//             db.createFriendRequest("bp@gmail.com", "fmash@gmail.com"),
-//             db.createFriendRequest("bp@gmail.com", "isfaroshir@gmail.com")
-//         ])
-//         return "Friend request from bp@gmail.com successfully sent to fmash@gmail.com & isfaroshir@gmail.com"
-//     } catch (error) { return error }
-// }
-
-
 const addUsersToGroup = async (groupId: String) => {
     const members: String[] = [
         'ioshir@traverse.zone',
