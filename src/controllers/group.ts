@@ -80,6 +80,7 @@ class GroupsController {
       })
       
     }
+
     async addMember(senderEmail, recipientEmail, groupId, groupsNamespace) {
         const db = DB.getInstance();
         try {
@@ -91,6 +92,7 @@ class GroupsController {
         }
     }
 
+    // Add users to a channel when they click on the channel
     async addUserToChannel(email: string, groupId: string, channelName: string){
         const db = DB.getInstance();
         try {
@@ -101,6 +103,7 @@ class GroupsController {
         }
     }
 
+    // Disconnect user from all channels
     async disconnectUserFromChannels(email: string) {
         const db = DB.getInstance();
         try {

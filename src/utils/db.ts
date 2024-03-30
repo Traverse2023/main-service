@@ -486,7 +486,9 @@ class DB {
     return new Promise(async (resolve, reject) => {
       try {
         const writeQuery = `MATCH (g:Group {id: $groupId})
-        MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g)`;
+        MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})
+        MERGE (c)-[:CHANNEL]->(g)
+        RETURN g, c`;
 
         const writeResult = await session.executeWrite((tx) =>
           tx.run(writeQuery, { groupId, channelUuid })
