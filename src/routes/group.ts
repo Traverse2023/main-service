@@ -2,22 +2,22 @@ import {Router, response} from 'express'
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 import StorageService from '../utils/storage-service.js';
+import {Namespace, Server, Socket} from "socket.io";
 
-
-const router = Router()
+const router = Router();
 const storageService: StorageService = StorageService.getInstance();
 
-router.use(checkAuth)
+router.use(checkAuth);
 
-router.get('/getGroups/:user1Email', getGroups)
+router.get('/getGroups/:user1Email', getGroups);
 
-router.post('/createGroup', createGroup)
+router.post('/createGroup', createGroup);
 
-router.get('/getMembers/:groupId', getMembers)
+router.get('/getMembers/:groupId', getMembers);
 
-router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers)
+router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers);
 
-const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
+const groupsRouter = (groupsNamespace, notificationNamespace) => {
     const groupsController = new GroupsController(groupsNamespace);
 
     groupsNamespace.on('connection', (socket) => {
@@ -43,9 +43,6 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
             socket.leaveAll()
             groupsController.deleteSocket(email)
             socket.join(groupId)
-            // const joinMsg = email + " read"
-            // groupsNamespace.to(groupId).emit('receiveMessage', joinMsg)
-            // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
         socket.on("joinCall", ( member, groupObj, channelName ) => {
@@ -62,7 +59,6 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
             const message = {
                 chatId: groupId,
                 type: "GROUP_MESSAGE",
-
                 sender: message_info.email,
                 channelId: message_info.channelName,
                 text: message_info.msg,
@@ -77,11 +73,12 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
 
                 groupsNamespace.to(groupId).emit('receiveMessage', response.data);
                // All members of chat
+                // TODO: Replace with DB call to get all members of chat
                 const groupMembers = message_info.members;
                // Members of chat who are in chat and seeing live messages
-                const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
+                const activeMembersInChat: Socket[] = await groupsNamespace.in(groupId).fetchSockets();
                // Members of chat who are in app
-                const activeMembers = await notificationNamespace.in(groupId).fetchSockets();
+                const activeMembers: Socket[] = await notificationNamespace.in(groupId).fetchSockets();
 
                 // Members of chat who are in app but no seeing live messages for the chat.
                 // These members need to receive a UI notification
@@ -108,22 +105,22 @@ const groupsRouter = (groupsNamespace, notificationNamespace, io) => {
                     }
 
                     storageService.createNotification(notification).then(res => {
-                        // console.log(res)
+                        console.log(res.data);
                     })
                 })
 
                 // Send a notification socket event to members who are in app but not in the live chat.
-                activeMembersNotInChat.forEach(userSocket => {
+                activeMembersNotInChat.forEach(memberSocket=> {
                     const notification = {
-                        pk: userSocket.handshake.query.email,
+                        pk: memberSocket.handshake.query.email,
                         chatId: groupId,
                         sender: email,
                         type: "GROUP_MESSAGE"
                     }
 
-                    console.log('86 sending to', userSocket.handshake.query.email, notification)
-                    userSocket.emit('globalNotification', notification);
-                    storageService.createNotification(notification).then(res => {console.log("\n")});
+                    console.log('Sending notification socket event to: ', memberSocket.handshake.query.email, notification)
+                    memberSocket.emit('globalNotification', notification);
+                    storageService.createNotification(notification).then(res => {console.log(res.data)});
                 })
             }).catch(err => console.log(err));
         })

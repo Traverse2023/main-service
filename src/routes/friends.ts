@@ -28,7 +28,7 @@ router.get('/removeFriendRequest/:user1Email/:user2Email', removeFriendRequest)
 // router.post('/sendFriendRequest', sendFriendRequest)
 router.post('/acceptFriendRequest', acceptFriendRequest)
 
-const friendsRouter = (friendsNamespace, io) => {
+const friendsRouter = (friendsNamespace, notificationNamespace) => {
     const friendsController = new FriendsController(friendsNamespace);
 
     friendsNamespace.on('connection', (socket) => {
@@ -40,7 +40,7 @@ const friendsRouter = (friendsNamespace, io) => {
         socket.on('disconnect', () => {
             const disconnectingUserEmail = socket.handshake.query.email
             // friendsController.getUserSockets().delete(disconnectingUserEmail, socket)
-            console.log(`Disconnecting user ${disconnectingUserEmail}`)
+            console.log(`Disconnecting user ${disconnectingUserEmail} from friends`)
         })
 
         socket.on("connect_error", (err) => {

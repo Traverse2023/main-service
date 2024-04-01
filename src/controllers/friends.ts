@@ -97,8 +97,8 @@ const removeFriendRequest = async(
 };
 
 class FriendsController {
-  private io
-  private userSockets
+  private io;
+  private userSockets;
   constructor(io) {
     this.io = io;
     this.userSockets = new Map();
@@ -123,6 +123,7 @@ class FriendsController {
       const value = await db.createFriendRequest(senderEmail, recipientEmail);
       if (recipientSocket) {
         console.log("Sending friend req to", recipientEmail)
+        this.io.of("/notifications").in(recipientSocket).emit('globalNotification', "friendRequest")
         recipientSocket.emit('receiveFriendRequest', senderEmail);
       } else {
 
@@ -137,9 +138,11 @@ class FriendsController {
     const recipientSocket = this.userSockets.get(recipientEmail);
     const db = DB.getInstance()
     try {
-      const value = await db.createFriendship(senderEmail, recipientEmail);
+      // TODO: //create notification
+      const value = await db.createFriendship(senderEmail, senderEmail);
       if (recipientSocket) {
         console.log("Sending accepted friend request notification to", recipientEmail)
+        this.io.of("/notifications").in(recipientSocket).emit('globalNotification', "friendRequestAccepted")
         recipientSocket.emit('receiveAcceptFriendRequest', senderEmail);
       } else {
 

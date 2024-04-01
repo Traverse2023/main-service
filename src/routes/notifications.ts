@@ -15,9 +15,10 @@ const notificationsRouter = (notificationNamespace: Namespace) => {
         })
 
         socket.on('leaveRoom', (chatId: string) => {
-            console.log(`User ${id} leaving room ${chatId}`);
+            console.log(`User ${id} leaving notification room ${chatId}`);
             socket.leave(chatId);
         })
+
 
     })
 }

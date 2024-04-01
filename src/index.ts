@@ -81,13 +81,14 @@ const io = new Server(server, {
   }
 });
 
-const friendsNamespace = io.of('/friends');
-friendsRouter(friendsNamespace, io);
-
 const notificationsNamespace = io.of('/notifications');
 notificationsRouter(notificationsNamespace);
+
+const friendsNamespace = io.of('/friends');
+friendsRouter(friendsNamespace, notificationsNamespace);
+
 const groupsNamespace = io.of('/groups');
-groupsRouter(groupsNamespace, notificationsNamespace, io);
+groupsRouter(groupsNamespace, notificationsNamespace);
 
 
 
