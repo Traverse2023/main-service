@@ -352,12 +352,6 @@ class DB {
   async createGroup(groupId: String, groupName: String, user1Email: String) {
     const session = this.localDriver.session({ database: "neo4j" });
 
-    // Currently initializes channels when a group is created
-    // TODO: Replace this with code to add channels through the add channel button
-    this.createChannel(groupId.toString() + "general", groupId)
-    this.createChannel(groupId.toString() + "announcements", groupId)
-    this.createChannel(groupId.toString() + "events", groupId)
-
     try {
       const writeQuery = `CREATE (g:Group {id: $groupId, groupName: $groupName})
                           WITH g
@@ -373,6 +367,11 @@ class DB {
         console.log("CREATED GROUP: ", groupName);
       });
       // await sendCreateGroupJob(groupName, user1Email)
+      // Currently initializes channels when a group is created
+      // TODO: Replace this with code to add channels through the add channel button
+      this.createChannel(groupId.toString() + "general", groupId)
+      this.createChannel(groupId.toString() + "announcements", groupId)
+      this.createChannel(groupId.toString() + "events", groupId)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
@@ -560,23 +559,23 @@ class DB {
   }
 
   // Removes user's link to channel when user leaves a channel
-  async leaveChannel(userEmail: String, channelUuid: String) {
+  async leaveAllChannels(userEmail: String) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
         const writeQuery = `MATCH (u:User {email: $userEmail})
-        MATCH (c:Channel {uuid: $channelUuid})
+        MATCH (c:Channel)
         MATCH (u)-[r:CHANNELMEMBER]->(c)
         DELETE r
         RETURN u, c`;
 
         const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { userEmail, channelUuid })
+        tx.run(writeQuery, { userEmail })
         );
 
       } catch (err) {
-        
+        console.log("leaveAllChannels FAILED", userEmail);
         reject(err);
       } finally {
         await session.close();
@@ -584,32 +583,6 @@ class DB {
       }
     })
   }
-
-    // Removes user's link to channel when user leaves a channel
-    async leaveAllChannels(userEmail: String) {
-      const session = this.localDriver.session({ database: "neo4j" });
-      let results = [];
-      return new Promise(async (resolve, reject) => {
-        try {
-          const writeQuery = `MATCH (u:User {email: $userEmail})
-          MATCH (c:Channel)
-          MATCH (u)-[r:CHANNELMEMBER]->(c)
-          DELETE r
-          RETURN u, c`;
-  
-          const writeResult = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { userEmail })
-          );
-  
-        } catch (err) {
-          console.log("leaveAllChannels FAILED", userEmail);
-          reject(err);
-        } finally {
-          await session.close();
-          resolve(results);
-        }
-      })
-    }
 }
 
 
