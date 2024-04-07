@@ -1,5 +1,8 @@
 import { driver, auth, Session, Integer } from "neo4j-driver";
 import dotenv from 'dotenv'
+import { promiseHooks } from "v8";
+import { resolve } from "path";
+import { rejects } from "assert";
 dotenv.config()
 
 const uri = process.env.NEO4J_URI;
@@ -346,7 +349,7 @@ class DB {
     })
   }
 
-  async createGroup(groupId, groupName, user1Email) {
+  async createGroup(groupId: String, groupName: String, user1Email: String) {
     const session = this.localDriver.session({ database: "neo4j" });
 
     try {
@@ -364,6 +367,11 @@ class DB {
         console.log("CREATED GROUP: ", groupName);
       });
       // await sendCreateGroupJob(groupName, user1Email)
+      // Currently initializes channels when a group is created
+      // TODO: Replace this with code to add channels through the add channel button
+      this.createChannel(groupId.toString() + "general", groupId)
+      this.createChannel(groupId.toString() + "announcements", groupId)
+      this.createChannel(groupId.toString() + "events", groupId)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
@@ -467,6 +475,115 @@ class DB {
       }
     });
   }
+  
+  // Creates a channel node and links it the the parent group
+  // channelUuid is groupId+channelName
+  async createChannel(channelUuid: String, groupId: String) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (g:Group {id: $groupId})
+        MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})
+        MERGE (c)-[:CHANNEL]->(g)
+        RETURN g, c`;
+
+        const writeResult = await session.executeWrite((tx) =>
+          tx.run(writeQuery, { groupId, channelUuid })
+        );
+
+        console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
+
+        // await sendCreateGroupJob(groupName, user1Email)
+      } catch (error) {
+        console.error(`Something went wrong: ${error}`);
+        reject(error);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    })
+  }
+
+  // Creates a channel node and links it the the parent group
+  async deleteChannel(channelUuid: string, groupId: Integer) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId}) 
+        DETACH DELETE c`;
+
+        const writeResult = await session.executeWrite((tx) =>
+          tx.run(writeQuery, { groupId, channelUuid })
+        );
+        console.log("DELETED CHANNEL FOR: ", groupId, "<-", channelUuid);
+
+        // await sendCreateGroupJob(groupName, user1Email)
+      } catch (error) {
+        console.error(`Something went wrong: ${error}`);
+        reject(error);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    })
+  }
+
+  // Saves when user joins a channel to neo4j, links user's node to channel when user joins
+  async joinChannel(userEmail: String, channelUuid: String) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      console.log(userEmail, channelUuid)
+      try {
+        const writeQuery = `MATCH (u:User {email: $userEmail})
+        MATCH (c:Channel {channelUuid: $channelUuid})
+        MERGE (u)-[r:CHANNELMEMBER]->(c)
+        RETURN u, c`;
+
+        const writeResult = await session.executeWrite((tx) =>
+          tx.run(writeQuery, { userEmail, channelUuid })
+        );
+
+        console.log(writeResult);
+
+      } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    })
+  }
+
+  // Removes user's link to channel when user leaves a channel
+  async leaveAllChannels(userEmail: String) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (u:User {email: $userEmail})
+        MATCH (c:Channel)
+        MATCH (u)-[r:CHANNELMEMBER]->(c)
+        DELETE r
+        RETURN u, c`;
+
+        const writeResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery, { userEmail })
+        );
+
+      } catch (err) {
+        console.log("leaveAllChannels FAILED", userEmail);
+        reject(err);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    })
+  }
 }
+
 
 export default DB;
