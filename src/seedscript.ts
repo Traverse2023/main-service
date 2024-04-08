@@ -1,6 +1,7 @@
 import DB from './utils/db.js'
 import bcrypt from "bcryptjs";
 import StorageService from "./utils/storage-service.js";
+import {randomUUID} from "crypto";
 
 const db = DB.getInstance()
 
@@ -90,30 +91,6 @@ const createUsers = async () => {
     }
 }
 
-// const createFriendships = async () => {
-//     try {
-//
-//         const user1Email = "isfaroshir@gmail.com"
-//         const user2Email = "fmash@gmail.com"
-//         const user3Email = "bp@gmail.com"
-//         await db.createFriendship(user1Email, user2Email)
-//         await db.createFriendship(user2Email, user3Email)
-//         return `Created friendship between ${user1Email} and ${user2Email} and ${user3Email} and ${user2Email}`
-//
-//     } catch(error) { return error }
-// }
-
-// const createFriendRequests = async () => {
-//     try {
-//         await Promise.all([
-//             db.createFriendRequest("bp@gmail.com", "fmash@gmail.com"),
-//             db.createFriendRequest("bp@gmail.com", "isfaroshir@gmail.com")
-//         ])
-//         return "Friend request from bp@gmail.com successfully sent to fmash@gmail.com & isfaroshir@gmail.com"
-//     } catch (error) { return error }
-// }
-
-
 const addUsersToGroup = async (groupId: String) => {
     const members: String[] = [
         'ioshir@traverse.zone',
@@ -133,18 +110,6 @@ const addUsersToGroup = async (groupId: String) => {
     }
 }
 
-const createStorageGroup = async () => {
-    const groupName: String = "TraverseAdmins";
-    const userEmail: String = "bpalomo@traverse.zone";
-    try{
-        const storageResponse = await storageService.createGroup(groupName);
-        console.log("Group created in storage-service: ", storageResponse.data);
-        return storageResponse.data;
-    } catch (err) {
-        console.log(err);
-    }
-}
-
 const createMainGroup = async (groupName: String, groupUUID: String) => {
     await db.createGroup(groupUUID, groupName, "bpalomo@traverse.zone");
 }
@@ -159,10 +124,10 @@ const script = async () => {
         console.log("Loading seed data...");
         const createUsersResponse = await createUsers();
         console.log(createUsersResponse);
-        const storageResponseData = await createStorageGroup();
-        const { name, id} = storageResponseData;
-        await createMainGroup(name, id);
-        await addUsersToGroup(id);
+        const groupId = randomUUID().toString();
+        const name = "Traverse Admins"
+        await createMainGroup(name, groupId);
+        await addUsersToGroup(groupId);
         console.log("Seed-script executed successfully.");
     } catch (err) {
         console.log("Seed-script failed: ", err);

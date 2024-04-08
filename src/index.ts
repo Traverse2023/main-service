@@ -8,14 +8,13 @@ import {router as userRoutes} from './routes/user.js'
 import {groupsRouter, router as groupRoutes} from './routes/group.js'
 import pkg from 'agora-access-token'
 const { RtcTokenBuilder, RtcRole } = pkg
-import { v4 as uuidv4 } from 'uuid';
-
-//import {setup, serve} from 'swagger-ui-express'
-//import swaggerFile from './swagger_output.json' assert {type: "json"}
 import * as http from "http";
 import {Server} from "socket.io";
 import {friendsRouter} from "./routes/friends.js";
-import {randomUUID} from "crypto";
+import {notificationsRouter} from "./routes/notifications.js";
+// @ts-ignore
+import {DefaultEventsMap} from "socket.io/dist/typed-events.js";
+
 
 const app: Express = express()
 
@@ -76,22 +75,24 @@ res.json({message: error.message || 'An unknown error occurred!'});
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
+const io:  Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
-
   }
 });
 
+const notificationsNamespace = io.of('/notifications');
+notificationsRouter(notificationsNamespace, io);
+
 const friendsNamespace = io.of('/friends');
-const friendsController = friendsRouter(friendsNamespace)
+friendsRouter(friendsNamespace, notificationsNamespace, io);
 
 const groupsNamespace = io.of('/groups');
-groupsRouter(groupsNamespace)
+groupsRouter(groupsNamespace, notificationsNamespace);
 
-const notificationsNamespace = io.of('/notifications');
-// notificationRouter(notificationsNamespace)
+
+
 
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}...`);
