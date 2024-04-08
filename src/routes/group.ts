@@ -1,8 +1,9 @@
-import {Router, response} from 'express'
+import {Router} from "express"
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
 import { checkAuth } from '../utils/check-auth.js'
 import StorageService from '../utils/storage-service.js';
-import {Namespace, Server, Socket} from "socket.io";
+import {Namespace, Socket} from "socket.io";
+
 
 const router = Router();
 const storageService: StorageService = StorageService.getInstance();
@@ -17,11 +18,11 @@ router.get('/getMembers/:groupId', getMembers);
 
 router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers);
 
-const groupsRouter = (groupsNamespace, notificationNamespace) => {
+const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespace) => {
     const groupsController = new GroupsController(groupsNamespace);
 
     groupsNamespace.on('connection', (socket) => {
-        const email = socket.handshake.query.email
+        const email: string = socket.handshake.query.email  as string;
         // socket.on("connect_error", (err) => {
         //     console.log(`connect_error due to ${err.message}`);
         // });
@@ -33,26 +34,22 @@ const groupsRouter = (groupsNamespace, notificationNamespace) => {
 
         socket.on('addMember', (recipientEmail, groupId) => {
             // console.log('43 unfriend', recipientEmail)
-            groupsController.addMember(email, recipientEmail, groupId, groupsNamespace).then((val) => {
+            groupsController.addMember(email, recipientEmail, groupId).then((val) => {
             })
         });
 
         //join room
         socket.on("joinRoom", ( groupId ) => {
             console.log("37", email, "joined", groupId)
-            socket.leaveAll()
+            socket.rooms.forEach(room => {if (room !== socket.id){socket.leave(room);}});
             groupsController.deleteSocket(email)
             socket.join(groupId)
         })
 
         socket.on("joinCall", ( member, groupObj, channelName ) => {
             console.log("52", email, "joinedCall", groupObj.groupId, channelName)
-            const targetRoom = groupsNamespace.in(groupObj.groupId);
-            const roomListeners = targetRoom.adapter.rooms.get(groupObj.groupId);
-            console.log('joinCalllisteneers', roomListeners)
             groupsNamespace.to(groupObj.groupId).emit('joinCallListener', member, channelName)
             console.log("after receiveJoinCall emit")
-            // socket.to(groupId).emit('joinMessage', joinMsg)
         })
 
         socket.on("sendMessage", async (groupId: string, message_info) => {
@@ -71,14 +68,16 @@ const groupsRouter = (groupsNamespace, notificationNamespace) => {
             storageService.createMessage(message).then(async response => {
                 console.log("Created and stored message: ", response.data);
 
+                console.log(`Emitting new message to group ${groupId}`)
+
                 groupsNamespace.to(groupId).emit('receiveMessage', response.data);
                // All members of chat
                 // TODO: Replace with DB call to get all members of chat
                 const groupMembers = message_info.members;
                // Members of chat who are in chat and seeing live messages
-                const activeMembersInChat: Socket[] = await groupsNamespace.in(groupId).fetchSockets();
+                const activeMembersInChat = await groupsNamespace.in(groupId).fetchSockets();
                // Members of chat who are in app
-                const activeMembers: Socket[] = await notificationNamespace.in(groupId).fetchSockets();
+                const activeMembers = await notificationNamespace.in(groupId).fetchSockets();
 
                 // Members of chat who are in app but no seeing live messages for the chat.
                 // These members need to receive a UI notification

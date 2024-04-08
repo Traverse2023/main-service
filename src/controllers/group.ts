@@ -3,6 +3,7 @@ import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
 import StorageService from "../utils/storage-service.js";
 import {randomUUID} from "crypto";
+import {Namespace, Socket} from "socket.io";
 
 const createGroup = async (req: Request, res: Response, next: NextFunction) => {
     const { groupName, user1Email } = req.body;
@@ -64,14 +65,15 @@ const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunct
 
 
 class GroupsController {
-    private io
-    private userSockets
-    constructor(io) {
-        this.io = io;
+
+    private userSockets: Map<string, Socket>;
+    private notificationNamespace: Namespace;
+    constructor(notificationNamespace: Namespace) {
+        this.notificationNamespace = notificationNamespace;
         this.userSockets = new Map();
     }
   
-    async getMembersByGroupId(groupId) {
+    async getMembersByGroupId(groupId: string) {
       const db = DB.getInstance();
       db.getMembers(groupId)
       .then((value) => {
@@ -82,11 +84,11 @@ class GroupsController {
       })
       
     }
-    async addMember(senderEmail, recipientEmail, groupId, groupsNamespace) {
+    async addMember(senderEmail: string, recipientEmail: string, groupId: string) {
         const db = DB.getInstance();
         try {
             const value = await db.addMemberToGroup(recipientEmail, groupId);
-            groupsNamespace.to(groupId).emit('receiveAddedToGroupNotification', senderEmail, recipientEmail)
+            this.notificationNamespace.to(groupId).emit('globalNotification', `${senderEmail} added ${recipientEmail} to the group!`)
         } catch (err) {
             console.error(err);
             throw new HttpError(err, 404);

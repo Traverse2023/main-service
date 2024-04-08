@@ -12,6 +12,8 @@ import * as http from "http";
 import {Server} from "socket.io";
 import {friendsRouter} from "./routes/friends.js";
 import {notificationsRouter} from "./routes/notifications.js";
+// @ts-ignore
+import {DefaultEventsMap} from "socket.io/dist/typed-events.js";
 
 
 const app: Express = express()
@@ -73,19 +75,18 @@ res.json({message: error.message || 'An unknown error occurred!'});
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
+const io:  Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
-
   }
 });
 
 const notificationsNamespace = io.of('/notifications');
-notificationsRouter(notificationsNamespace);
+notificationsRouter(notificationsNamespace, io);
 
 const friendsNamespace = io.of('/friends');
-friendsRouter(friendsNamespace, notificationsNamespace);
+friendsRouter(friendsNamespace, notificationsNamespace, io);
 
 const groupsNamespace = io.of('/groups');
 groupsRouter(groupsNamespace, notificationsNamespace);

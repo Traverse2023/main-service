@@ -11,6 +11,7 @@ import {
     sendFriendRequest
 } from '../controllers/friends.js'
 import { checkAuth } from '../utils/check-auth.js'
+import {Namespace} from "socket.io";
 
 const router = Router()
 
@@ -28,13 +29,12 @@ router.get('/removeFriendRequest/:user1Email/:user2Email', removeFriendRequest)
 // router.post('/sendFriendRequest', sendFriendRequest)
 router.post('/acceptFriendRequest', acceptFriendRequest)
 
-const friendsRouter = (friendsNamespace, notificationNamespace) => {
-    const friendsController = new FriendsController(friendsNamespace);
+const friendsRouter = (friendsNamespace: Namespace, notificationNamespace: Namespace, io) => {
+    const friendsController = FriendsController.getInstance(io);
 
     friendsNamespace.on('connection', (socket) => {
-        const email = socket.handshake.query.email
-        friendsController.registerSocket(email, socket)
-        console.log('36friendsconnection', email)
+        const email = socket.handshake.query.email as string;
+        console.log('Friends connection', email);
 
 
         socket.on('disconnect', () => {
@@ -56,7 +56,7 @@ const friendsRouter = (friendsNamespace, notificationNamespace) => {
 
         socket.on('sendFriendRequest', (recipientEmail) => {
             friendsController.sendFriendRequest(email, recipientEmail).then((val)=>{
-                // console.log('routesfriends38', val)
+                console.log('routesfriends38', val)
             });
         });
 
