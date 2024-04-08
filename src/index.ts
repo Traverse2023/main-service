@@ -43,7 +43,7 @@ app.get("/getAgoraToken/:email/:channelName", (req, res) => {
   const appCertificate = 'aa92b0a26b154fb191a2fd43003bf854'; // Or null if not using certificate
   const channelName = req.params.channelName;
   const email = req.params.email
-  console.log('channelName', channelName)
+  // console.log('channelName', channelName)
   // const uid = uuidv4(); // Unique identifier for the user, can be any number
   const uid = 0
   const role = RtcRole.PUBLISHER; // Role of the user (publisher, subscriber)

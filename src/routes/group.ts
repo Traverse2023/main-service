@@ -8,7 +8,8 @@ import {Namespace, Socket} from "socket.io";
 const router = Router();
 const storageService: StorageService = StorageService.getInstance();
 
-router.use(checkAuth);
+// Define API routes
+router.use(checkAuth)
 
 router.get('/getGroups/:user1Email', getGroups);
 
@@ -19,6 +20,7 @@ router.get('/getMembers/:groupId', getMembers);
 router.get('/getFriendsWhoAreNotMembers/:user1Email/:groupId', getFriendsWhoAreNotMembers);
 
 const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespace) => {
+// Define websockets
     const groupsController = new GroupsController(groupsNamespace);
 
     groupsNamespace.on('connection', (socket) => {
@@ -28,6 +30,7 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
         // });
 
         socket.on('disconnect', () => {
+            groupsController.disconnectUserFromChannels(email);
             groupsController.deleteSocket(email)
             groupsNamespace.emit('sendMessage', email + 'has disconnected')
         })
@@ -46,10 +49,26 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
             socket.join(groupId)
         })
 
+        // Join voice call
         socket.on("joinCall", ( member, groupObj, channelName ) => {
+            // Disconnect from any existing channels, if any.
+            groupsController.disconnectUserFromChannels(email);
             console.log("52", email, "joinedCall", groupObj.groupId, channelName)
+            // Set up listeners
+            const targetRoom = groupsNamespace.in(groupObj.groupId);
+            const roomListeners = targetRoom.adapter.rooms.get(groupObj.groupId);
+            console.log('joinCalllisteners', roomListeners)
+
+            // Add user to new channel
+            groupsController.addUserToChannel(email, groupObj.groupId, channelName);
             groupsNamespace.to(groupObj.groupId).emit('joinCallListener', member, channelName)
             console.log("after receiveJoinCall emit")
+        })
+
+        // Leave voice call (hang up button)
+        socket.on("disconnectCall", (member, groupObj, channelName) => {
+            groupsController.disconnectUserFromChannels(email);
+            console.log(email, "leftCall", groupObj.groupId, channelName)
         })
 
         socket.on("sendMessage", async (groupId: string, message_info) => {
