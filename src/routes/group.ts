@@ -54,13 +54,10 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
             // Disconnect from any existing channels, if any.
             groupsController.disconnectUserFromChannels(email);
             console.log("52", email, "joinedCall", groupObj.groupId, channelName)
-            // Set up listeners
-            const targetRoom = groupsNamespace.in(groupObj.groupId);
-            const roomListeners = targetRoom.adapter.rooms.get(groupObj.groupId);
-            console.log('joinCalllisteners', roomListeners)
 
             // Add user to new channel
-            groupsController.addUserToChannel(email, groupObj.groupId, channelName);
+            groupsController.addUserToChannel(email, groupObj.groupId, channelName)
+                .then(r => console.log(`User ${email} added to group ${groupObj.groupId}`));
             groupsNamespace.to(groupObj.groupId).emit('joinCallListener', member, channelName)
             console.log("after receiveJoinCall emit")
         })
