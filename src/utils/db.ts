@@ -369,9 +369,9 @@ class DB {
       // await sendCreateGroupJob(groupName, user1Email)
       // Currently initializes channels when a group is created
       // TODO: Replace this with code to add channels through the add channel button
-      this.createChannel(groupId.toString() + "general", groupId)
-      this.createChannel(groupId.toString() + "announcements", groupId)
-      this.createChannel(groupId.toString() + "events", groupId)
+      this.createChannel(groupId.toString() + "#general", groupId)
+      this.createChannel(groupId.toString() + "#announcements", groupId)
+      this.createChannel(groupId.toString() + "#events", groupId)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
