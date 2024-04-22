@@ -44,7 +44,8 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
         //join room
         socket.on("joinRoom", ( groupId ) => {
             console.log("37", email, "joined", groupId)
-            socket.rooms.forEach(room => {if (room !== socket.id){socket.leave(room);}});
+            // @ts-ignore
+            socket.leaveAll()
             groupsController.deleteSocket(email)
             socket.join(groupId)
         })
@@ -66,6 +67,7 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
         socket.on("disconnectCall", (member, groupObj, channelName) => {
             groupsController.disconnectUserFromChannels(email);
             console.log(email, "leftCall", groupObj.groupId, channelName)
+            groupsNamespace.to(groupObj.groupId).emit('disconnectCallListener', member, channelName)
         })
 
         socket.on("sendMessage", async (groupId: string, message_info) => {

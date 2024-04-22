@@ -4,6 +4,7 @@ import DB from "../utils/db.js";
 import {Namespace, Server, Socket} from "socket.io";
 // @ts-ignore
 import {DefaultEventsMap} from "socket.io/dist/typed-events.js";
+import {NotificationsController} from "./notifications.js";
 
 
 const addFriend = (req: Request, res: Response) => {
@@ -105,9 +106,11 @@ class FriendsController {
   public static instance: FriendsController;
   private userSockets: Map<String, Socket>;
   private notificationNamespace: Namespace;
+  private notificationsController: NotificationsController;
   constructor(io: Server< Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>>) {
     this.userSockets = new Map();
     this.notificationNamespace = io.of("/notifications");
+    this.notificationsController = NotificationsController.getInstance(io);
   }
   public static getInstance(io: Server< Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>>): FriendsController {
     if (!FriendsController.instance) {
@@ -122,12 +125,15 @@ class FriendsController {
 
   async sendFriendRequest(senderEmail: string, recipientEmail: string) {
     const recipientSocket = this.userSockets.get(recipientEmail);
+    const notificationsRecipientSocket = this.notificationsController.getUserSocketById(recipientEmail)
     const db = DB.getInstance()
     try {
       const value = await db.createFriendRequest(senderEmail, recipientEmail);
+      if (notificationsRecipientSocket) {
+        this.notificationNamespace.in(notificationsRecipientSocket.id).emit('globalNotification', "friendRequest")
+      }
       if (recipientSocket) {
         console.log("Sending friend req to", recipientEmail)
-        this.notificationNamespace.in(recipientSocket.id).emit('globalNotification', "friendRequest")
         recipientSocket.emit('receiveFriendRequest', senderEmail);
       } else {
 
@@ -140,15 +146,18 @@ class FriendsController {
 
   async acceptFriendRequest(senderEmail: string, recipientEmail: string) {
     const recipientSocket = this.userSockets.get(recipientEmail);
+    const notificationsRecipientSocket = this.notificationsController.getUserSocketById(recipientEmail)
     const db = DB.getInstance()
     try {
       // TODO: //create notification
       const value = await db.createFriendship(senderEmail, recipientEmail);
       console.log(`Friendship created: ${value}, ${senderEmail}, ${recipientEmail}`);
+      if (notificationsRecipientSocket) {
+        this.notificationNamespace.in(notificationsRecipientSocket.id).emit('globalNotification', "friendRequestAccepted");
+      }
       if (recipientSocket) {
         console.log("Sending accepted friend request notification to", recipientEmail)
-        this.notificationNamespace.in(recipientSocket.id).emit('globalNotification', "friendRequestAccepted");
-       //recipientSocket.emit('receiveAcceptFriendRequest', senderEmail);
+        recipientSocket.emit('receiveAcceptFriendRequest', senderEmail);
       } else {
         console.log("acceptFriendRequest no socket found...");
       }

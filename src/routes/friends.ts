@@ -33,9 +33,9 @@ const friendsRouter = (friendsNamespace: Namespace, notificationNamespace: Names
     const friendsController = FriendsController.getInstance(io);
 
     friendsNamespace.on('connection', (socket) => {
-        const email = socket.handshake.query.email as string;
-        console.log('Friends connection', email);
-
+        const id = socket.handshake.query.email as string;
+        console.log('Friends connection', id);
+        friendsController.registerSocket(id, socket);
 
         socket.on('disconnect', () => {
             const disconnectingUserEmail = socket.handshake.query.email
@@ -49,26 +49,26 @@ const friendsRouter = (friendsNamespace: Namespace, notificationNamespace: Names
 
         socket.on('unfriend', (recipientEmail) => {
             console.log('43 unfriend', recipientEmail)
-            friendsController.unfriend(email, recipientEmail).then((val) => {
+            friendsController.unfriend(id, recipientEmail).then((val) => {
 
             })
         });
 
         socket.on('sendFriendRequest', (recipientEmail) => {
-            friendsController.sendFriendRequest(email, recipientEmail).then((val)=>{
+            friendsController.sendFriendRequest(id, recipientEmail).then((val)=>{
                 console.log('routesfriends38', val)
             });
         });
 
         socket.on('declineFriendRequest', (recipientEmail) => {
             console.log('here52declineReq')
-            friendsController.declineFriendRequest(email, recipientEmail).then((val)=>{
+            friendsController.declineFriendRequest(id, recipientEmail).then((val)=>{
                 // console.log('routesfriends38', val)
             });
         });
 
         socket.on('acceptFriendRequest', (recipientEmail) => {
-            friendsController.acceptFriendRequest(email, recipientEmail).then((val)=>{
+            friendsController.acceptFriendRequest(id, recipientEmail).then((val)=>{
                 // console.log('routesfriends38', val)
             });
         });
