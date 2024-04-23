@@ -38,22 +38,36 @@ app.get("/", (req, res) => {
   res.send("Healthy")
 })
 
+function hashStringToInteger(str) {
+  let hash = 0;
+  if (str.length === 0) return hash;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
 app.get("/getAgoraToken/:email/:channelName", (req, res) => {
   const appId = '056e7ee25ec24b4586f17ec177e121d1';
   const appCertificate = 'aa92b0a26b154fb191a2fd43003bf854'; // Or null if not using certificate
   const channelName = req.params.channelName;
   const email = req.params.email
-  // console.log('channelName', channelName)
-  // const uid = uuidv4(); // Unique identifier for the user, can be any number
-  const uid = 0
+  console.log('channelName', channelName)
+  // const uid = 0
   const role = RtcRole.PUBLISHER; // Role of the user (publisher, subscriber)
   const expirationTimeInSeconds = 3600; // 1 hour expiration time
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
-
-  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, uid, role, privilegeExpiredTs);
+  const uid = uuidv4()
+  const uidInt = hashStringToInteger(uid)
+  // const uidInt = Math.floor(Math.random() * 1000000)
+  console.log('uidInt', uidInt)
+  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, uidInt, role, privilegeExpiredTs);
   console.log('Agora Token:', token, 'uid' , uid);
-  res.json({token: token, uid: uid, email: email})
+
+  res.json({token: token, uid: uidInt, email: email})
 })
 
 app.use("/api/auth", authRoutes)
@@ -97,3 +111,4 @@ groupsRouter(groupsNamespace, notificationsNamespace);
 server.listen(PORT, () => {
     console.log(`Server on ${PORT}...`);
 })
+
