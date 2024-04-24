@@ -7,6 +7,7 @@ import { router as searchRoutes } from './routes/search.js'
 import {router as userRoutes} from './routes/user.js'
 import {groupsRouter, router as groupRoutes} from './routes/group.js'
 import pkg from 'agora-access-token'
+import { v4 as uuidv4 } from 'uuid';
 const { RtcTokenBuilder, RtcRole } = pkg
 import * as http from "http";
 import {Server} from "socket.io";
