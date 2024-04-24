@@ -31,7 +31,7 @@ const createUsers = async () => {
                     email: "ioshir@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Isfar");
+                    resolve("ioshir@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -41,7 +41,7 @@ const createUsers = async () => {
                     email: "fmashud@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Farhan");
+                    resolve("fmashud@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -51,7 +51,7 @@ const createUsers = async () => {
                     email: "bpalomo@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Bryan");
+                    resolve("bpalomo@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -61,7 +61,7 @@ const createUsers = async () => {
                     email: "jqiu@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Junming");
+                    resolve("jqiu@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -71,7 +71,7 @@ const createUsers = async () => {
                     email: "aimran@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Ahmed I");
+                    resolve("aimran@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -81,24 +81,50 @@ const createUsers = async () => {
                     email: "arahi@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Ahmed R");
+                    resolve("arahi@traverse.zone");
                 }).catch(err => reject(err));
-            })
+            }),
+            new Promise((resolve, reject) => {
+                db.createUser({
+                    firstName: "Hamza",
+                    lastName: "Ali",
+                    email: "hali@traverse.zone",
+                    password: hashedPassword
+                }).then( _ => {
+                    resolve("hali@traverse.zone");
+                }).catch(err => reject(err));
+            }),
+            new Promise((resolve, reject) => {
+                db.createUser({
+                    firstName: "Carlos",
+                    lastName: "Maranon",
+                    email: "cmaranon@traverse.zone",
+                    password: hashedPassword
+                }).then( _ => {
+                    resolve("cmaranon@traverse.zone");
+                }).catch(err => reject(err));
+            }),
+            new Promise((resolve, reject) => {
+                db.createUser({
+                    firstName: "Srinath",
+                    lastName: "Srinivasan",
+                    email: "ssrinivasan@traverse.zone",
+                    password: hashedPassword
+                }).then( _ => {
+                    resolve("ssrinivasan@traverse.zone");
+                }).catch(err => reject(err));
+            }),
         ]);
-        return "Following Users Created: " + response.join();
+        console.log(response, 'response')
+        return response
     } catch (err) {
         return err;
     }
 }
 
-const addUsersToGroup = async (groupId: String) => {
-    const members: String[] = [
-        'ioshir@traverse.zone',
-        'fmashud@traverse.zone',
-        'jqiu@traverse.zone',
-        'aimran@traverse.zone',
-        'arahi@traverse.zone',
-    ];
+const addUsersToGroup = async (groupId: String, createUsersResponse) => {
+    let members = createUsersResponse
+    members = members.filter(email => email !== "bpalomo@traverse.zone")
     try {
         for (const memberEmail of members) {
             const res = await db.addMemberToGroup(memberEmail, groupId);
@@ -127,7 +153,7 @@ const script = async () => {
         const groupId = randomUUID().toString();
         const name = "Traverse Admins"
         await createMainGroup(name, groupId);
-        await addUsersToGroup(groupId);
+        await addUsersToGroup(groupId, createUsersResponse);
         console.log("Seed-script executed successfully.");
     } catch (err) {
         console.log("Seed-script failed: ", err);
