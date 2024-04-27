@@ -14,8 +14,8 @@ class NotificationsController {
         this.notificationNamespace = io.of("/notifications");
     }
 
-    public getUserSocketById(id: String) {
-        return this.userSockets.get(id);
+    public getUserSocketById(userId: String) {
+        return this.userSockets.get(userId);
     }
 
     public static getInstance(io: Server<Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>>): NotificationsController {
@@ -25,8 +25,8 @@ class NotificationsController {
         return NotificationsController.instance;
     }
 
-    registerSocket(email: string, givenSocket: Socket) {
-        this.userSockets.set(email, givenSocket)
+    registerSocket(userId: string, givenSocket: Socket) {
+        this.userSockets.set(userId, givenSocket)
     }
 }
 export {

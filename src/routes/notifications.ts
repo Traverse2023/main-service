@@ -10,7 +10,7 @@ const notificationsRouter = (notificationNamespace: Namespace, io) => {
 
     notificationNamespace.on('connection', (socket: Socket) => {
         console.log("Notifications connection")
-        const id: string = socket.handshake.query.email as string;
+        const id: string = socket.handshake.query.userId as string;
         notificationsController.registerSocket(id, socket);
 
         socket.on('joinRoom', (chatId: string) => {

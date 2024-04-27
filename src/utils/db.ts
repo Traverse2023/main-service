@@ -1,4 +1,4 @@
-import { driver, auth, Session, Integer } from "neo4j-driver";
+import {driver, auth, Session, Integer, Record} from "neo4j-driver";
 import dotenv from 'dotenv'
 import { promiseHooks } from "v8";
 import { resolve } from "path";
@@ -56,7 +56,7 @@ class DB {
   async createUserUnique() {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
-      const writeQuery = `CREATE CONSTRAINT FOR (u:User) REQUIRE u.email IS UNIQUE`;
+      const writeQuery = `CREATE CONSTRAINT FOR (u:User) REQUIRE u.username IS UNIQUE`;
 
       const writeResult = await session.executeWrite((tx) =>
         tx.run(writeQuery)
@@ -73,16 +73,16 @@ class DB {
     }
   }
 
-  async savePFP(user1Email, pfpURL) {
-    console.log('savePFP', user1Email, pfpURL)
+  async savePFP(userId: string, pfpURL: string) {
+    console.log('savePFP', userId, pfpURL)
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
-      const writeQuery = `MERGE (u:User {email: $user1Email})
+      const writeQuery = `MERGE (u:User) WHERE elementId(u) = $userId
                                                     SET u.pfpURL = $pfpURL
                                                     RETURN u`;
 
       const writeResult = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { user1Email, pfpURL })
+          tx.run(writeQuery, { userId, pfpURL })
       );
 
       writeResult.records.forEach((record) => {
@@ -119,16 +119,15 @@ class DB {
     }
   }
 
-  async findUser(email : string) {
+  async findUserById(userId : string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     return new Promise(async (res, rej) => {
       try {
-        const readQuery = `MATCH (u:User)
-                                WHERE u.email = $email
-                                RETURN u AS user`;
+        const readQuery = `MATCH (n:User) WHERE elementId(n) = $userId 
+        RETURN {id:elementId(n), email:n.username, firstName:n.firstName, lastName:n.lastName, pfpUrl:n.pfpURL } AS user`;
 
         const readResult = await session.executeRead((tx) =>
-          tx.run(readQuery, { email })
+          tx.run(readQuery, { userId })
         );
 
         readResult.records.forEach((record) => {
@@ -145,41 +144,42 @@ class DB {
     });
   }
 
-  async createFriendRequest(user1Email : string, user2Email : string) {
+  async createFriendRequest(userId : string, potentialFriendId : string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
 
     return new Promise(async (resolve, reject) => {
       try {
-        const writeQuery = `MATCH (u1:User {email: $user1Email}),
-                                          (u2:User {email: $user2Email})
+        const writeQuery = `MATCH (u1:User) WHERE elementId(u1) = $user1Id,
+                                          (u2:User) WHERE elementId(u1) = $user2Id
                                     CREATE (u1)-[r:FRIEND_REQUEST]->(u2)
-                                    RETURN u1.email, type(r), u2.email`;
+                                    RETURN u1.username, type(r), u2.username`;
 
         const writeResult = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { user1Email, user2Email })
+          tx.run(writeQuery, { userId, potentialFriendId })
         );
+        console.log(`Create friend request result: ${writeResult}`);
         writeResult.records.forEach((record) => {
-          resolve(`${user1Email} sent ${user2Email} a friend req.`);
+          resolve(record.get(""));
         });
       } catch (err) {
         reject(err);
       } finally {
-        session.close();
+        await session.close();
       }
     });
   }
 
-  async createFriendship(user1Email : string, user2Email : string) {
+  async createFriendship(user1Id : string, user2Id : string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
-      const promiseArr = await Promise.all([this.removeFriendRequest(user1Email, user2Email), new Promise(async (resolve, reject) => {
+      const promiseArr = await Promise.all([this.removeFriendRequest(user1Id, user2Id), new Promise(async (resolve, reject) => {
         try {
-          const writeQuery = `MATCH (u1:User {email: $user1Email}),
-                                (u2:User {email: $user2Email})
+          const writeQuery = `MATCH (u1:User) WHERE elementId(u1) = $user1Id,
+                                (u2:User) WHERE elementId(u2) = $user2Id
                           CREATE (u1)-[r:FRIENDS]->(u2)
-                          RETURN u1.email, type(r), u2.email`;
-          await session.run(writeQuery, { user1Email, user2Email })
-          resolve(`CREATED FRIENDSHIP BTWN: ${user1Email} and ${user2Email}`);
+                          RETURN u1.username, type(r), u2.username`;
+          await session.run(writeQuery, {  user1Id, user2Id })
+          resolve(`CREATED FRIENDSHIP: ${user1Id} and ${user2Id}`);
         } catch (err) {
           reject(`Something went wrong: ${err}`);
         } finally {
@@ -191,16 +191,16 @@ class DB {
   } catch(error) { console.log(error) }
   }
 
-  async getFriendRequests(userEmail : string) {
+  async getFriendRequests(userId : string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH p=(s:User)-[:FRIEND_REQUEST]->(u:User {email: $userEmail})
+        const readQuery = `MATCH p=(s:User)-[:FRIEND_REQUEST]->(u:User) WHERE elementId(u) = $userId
                                    RETURN s`;
 
         const readResult = await session.executeRead((tx) =>
-          tx.run(readQuery, { userEmail })
+          tx.run(readQuery, { userId })
         );
         results = readResult.records.map(record => record["_fields"][0].properties)
       } catch (err) {
@@ -212,16 +212,17 @@ class DB {
     });
   }
 
-  async getFriends(user1Email : string) {
+  async getFriends(userId : string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH p=(s:User)-[:FRIENDS]-(u:User {email: $user1Email})
+        const readQuery = `MATCH p=(s:User)-[:FRIENDS]-(u:User) WHERE elementId(u) = $userId
         RETURN s`;
         const readResult = await session.executeRead((tx) =>
-          tx.run(readQuery, { user1Email })
+          tx.run(readQuery, { userId })
         );
         await session.close();
+        console.log(`Get friends db response: ${readResult}`);
         resolve(readResult.records.map(record => record["_fields"][0].properties))
         
       } catch (err) {
@@ -231,20 +232,21 @@ class DB {
     });
   }
 
-  async searchUsers(searcher, searched) {
+  async searchUsers(searchingUserId: string, searched: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
         const readQuery = `MATCH (u:User)
                                 WITH u, u.firstName + ' ' + u.lastName AS fullname
-                                WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) OR toLower(u.lastName) CONTAINS toLower($searched) OR u.email CONTAINS $searched
+                                WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) OR toLower(u.lastName) CONTAINS toLower($searched) OR u.username CONTAINS $searched
                                 RETURN u, 
-                                EXISTS( (:User {email: $searcher})-[:FRIENDS]-(u) ),
-                                EXISTS( (:User {email: $searcher})-[:FRIEND_REQUEST]-(u) )`;
+                                MATCH (u1:User) WHERE elementId(u1) = $searchingUserId
+                                EXISTS( u1-[:FRIENDS]-(u) ),
+                                EXISTS( u1-[:FRIEND_REQUEST]-(u) )`;
 
         const readResult = await session.executeRead((tx) =>
-          tx.run(readQuery, { searched, searcher })
+          tx.run(readQuery, { searched, searchingUserId})
         );
         results = readResult.records.map(record => record["_fields"][0].properties)
       } catch (err) {
@@ -256,24 +258,26 @@ class DB {
     });
   }
 
-  async getFriendshipStatus(user1Email, user2Email) {
+  async getFriendshipStatus(user1Id: string, user2Id: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = {};
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (:User{email : $user1Email})-[r]-(:User{email : $user2Email})
-                                   RETURN type(r) as type, startNode(r)`;
+        const readQuery = `MATCH (u1:User)-[r]-(u2:User) 
+        WHERE elementId(u1) = $user1Id AND elementId(u2) = $user2Id
+        RETURN type(r) as type, elementId(startNode(r))`;
 
         const readResult = await session.executeRead((tx) =>
-          tx.run(readQuery, { user1Email, user2Email })
+          tx.run(readQuery, { user1Id, user2Id })
         );
 
-        readResult.records.forEach((record) => {
+        readResult.records.forEach((record: Record) => {
 
           results = {
             friendshipStatus: record["_fields"][0],
-            initiatedUser: record["_fields"][1].properties.email,
+            initiatedUser: record["_fields"][1]
           };
+          console.log(results)
         });
       } catch (err) {
         reject(err);
@@ -286,17 +290,18 @@ class DB {
     });
   }
 
-  async getMutualFriends(user1Email, user2Email) {
+  async getMutualFriends(user1Id: string, user2Id: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
-    let results = [];
+
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u1:User {email: $user1Email})-[:FRIENDS]-(f:User)
-                                    WHERE (f)-[:FRIENDS]-(:User {email: $user2Email}) 
-                                    RETURN DISTINCT f`;
+        const readQuery = `MATCH (u1:User)-[:FRIENDS]-(fof:User),
+                                    (u2:User)-[:FRIENDS]-(fof:User)
+                                    WHERE elementId(u1) = $user1Id AND elementId(u2) = $user2Id
+                                    RETURN DISTINCT fof`;
 
         const readResult = await session.executeRead((tx) =>
-          tx.run(readQuery, { user1Email, user2Email })
+          tx.run(readQuery, { user1Id, user2Id })
         );
         await session.close()
         resolve(readResult.records.map(record => record["_fields"][0].properties))
@@ -307,13 +312,38 @@ class DB {
     });
   }
 
-  async removeFriendRequest(user1Email, user2Email) {
+  async removeFriendRequest(user1Id: string, user2Id: string) {
+    const session: Session = this.localDriver.session({ database: "neo4j" });
+    const parameters = {
+      user1Id,
+      user2Id,
+    };
+    const query = `MATCH (u1:User)-[r]-(u2:User) 
+    WHERE elementId(u1) = $user1Id AND elementId(u2) = $user2Id 
+    DELETE r`;
+    return new Promise(async (resolve, reject) => {
+      try {
+        await session.run(query, parameters)
+        console.log("Relationship deleted successfully");
+        resolve("Relationship deleted successfully")
+      }
+      catch (error) {
+        console.log(error)
+        reject(error)
+      }
+      await session.close()
+    })
+  }
+
+  async unfriend(user1Id: string, user2Id: string) {
     const session = this.localDriver.session({ database: "neo4j" });
     const parameters = {
-      user1Email,
-      user2Email,
+      user1Id,
+      user2Id,
     };
-    const query = `MATCH (:User {email: $user1Email})-[r]-(:User {email: $user2Email}) DELETE r`;
+    const query = `MATCH (u1:User)-[r]-(u2:User) 
+    WHERE elementId(u1) = $user1Id AND elementId(u2) = $user2Id 
+    DELETE r`;
     return new Promise(async (resolve, reject) => {
       try {
         await session.run(query, parameters)
@@ -328,45 +358,24 @@ class DB {
     })
   }
 
-  async unfriend(user1Email, user2Email) {
-    const session = this.localDriver.session({ database: "neo4j" });
-    const parameters = {
-      user1Email,
-      user2Email,
-    };
-    const query = `MATCH (:User {email: $user1Email})-[r]-(:User {email: $user2Email}) DELETE r`;
-    return new Promise(async (resolve, reject) => {
-      try {
-        await session.run(query, parameters)
-        console.log("Relationship deleted successfully");
-        resolve("Relationship deleted successfully")
-      }
-      catch (error) {
-        console.log(error)
-        reject(error)
-      }
-      session.close()
-    })
-  }
-
-  async createGroup(groupId: String, groupName: String, user1Email: String) {
+  async createGroup(groupName: string, userId: string): Promise<string> {
     const session = this.localDriver.session({ database: "neo4j" });
 
     try {
-      const writeQuery = `CREATE (g:Group {id: $groupId, groupName: $groupName})
-                          WITH g
-                          MATCH (u:User {email: $user1Email})
-                          CREATE (g)<-[:MEMBER]-(u)`;
+      const writeQuery = `CREATE (g:Group { groupName: $groupName }) WITH g
+      MATCH (u:User) WHERE elementId(u) = $userId
+      CREATE (g)<-[:MEMBER]-(u)
+      return g{.*, id: elementId(g)}`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { groupId, groupName, user1Email })
+        tx.run(writeQuery, { groupName, userId })
       );
-
-      writeResult.records.forEach((record) => {
-        const createdGroup = record.get("g");
-        console.log("CREATED GROUP: ", groupName);
+      let ;
+      writeResult.records.forEach(record => {
+        record = record.get("g");
+        console.log("CREATED GROUP: ", createdGroup);
       });
-      // await sendCreateGroupJob(groupName, user1Email)
+
       // Currently initializes channels when a group is created
       // TODO: Replace this with code to add channels through the add channel button
       this.createChannel(groupId.toString() + "general", groupId)
@@ -379,16 +388,15 @@ class DB {
     }
   }
 
-  async getGroups(user1Email) {
+  async getGroups(userId: string) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u:User {email: $user1Email})-[:MEMBER]-(g:Group)
-                           RETURN g`;
+        const readQuery = `MATCH (u:User)-[:MEMBER]-(g:Group) WHERE elementId(u) = $userIdRETURN g`;
 
         const readResult = await session.executeRead((tx) =>
-          tx.run(readQuery, { user1Email })
+          tx.run(readQuery, { userId })
         );
 
         readResult.records.forEach((record) => {
@@ -409,7 +417,7 @@ class DB {
     });
   }
 
-  async getMembers(id) {
+  async getMembers(groupId: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
@@ -418,7 +426,7 @@ class DB {
                                    RETURN u`;
 
         const readResult = await session.executeRead((tx) =>
-            tx.run(readQuery, { id })
+            tx.run(readQuery, { groupId })
         );
         results = readResult.records.map(record => record["_fields"][0].properties)
       } catch (err) {
@@ -430,17 +438,21 @@ class DB {
     });
   }
 
-  async getFriendsWhoAreNotMembers(user1Email, id) {
+  async getFriendsWhoAreNotMembers(userId: string, groupId: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (:User {email:$user1Email})-[:FRIENDS]-(u:User)
-                                                      WHERE NOT (u)-[:MEMBER]-(:Group {id: $id})
+        // MATCH (g:Group) WHERE elementId(g) = "4:8114b88d-43b4-434e-9f33-cc8a931aa4d3:13"
+        // MATCH (u:User)-[:FRIENDS]-(u2:User)
+        // WHERE elementId(u) = "4:8114b88d-43b4-434e-9f33-cc8a931aa4d3:10" AND NOT (u2)-[:MEMBER]-(g)
+        // RETURN u2
+        const readQuery = `MATCH (u:User)-[:FRIENDS]-(u2:User)
+                                                      WHERE NOT (u)-[:MEMBER]-(:Group {id: $id}) AND elementId(u) = $userId
                                                       RETURN u`;
 
         const readResult = await session.executeRead((tx) =>
-            tx.run(readQuery, { user1Email, id })
+            tx.run(readQuery, { userId, groupId })
         );
         results = readResult.records.map(record => record["_fields"][0].properties)
       } catch (err) {
@@ -452,18 +464,18 @@ class DB {
     });
   }
 
-  async addMemberToGroup(user1Email, groupId) {
+  async addMemberToGroup(userId: string, groupId: string) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const writeQuery = `MATCH (u:User {email: $user1Email})
+        const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId
                                                         MATCH (g:Group {id: $groupId})
                                                         CREATE (u)-[r:MEMBER]->(g)
                                                         RETURN u, g`;
 
         const writeResult = await session.executeWrite((tx) =>
-            tx.run(writeQuery, { user1Email, groupId })
+            tx.run(writeQuery, { userId, groupId })
         );
       } catch (err) {
         reject(err);
@@ -494,8 +506,6 @@ class DB {
         );
 
         console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
-
-        // await sendCreateGroupJob(groupName, user1Email)
       } catch (error) {
         console.error(`Something went wrong: ${error}`);
         reject(error);
@@ -506,7 +516,7 @@ class DB {
     })
   }
 
-  // Creates a channel node and links it the the parent group
+  // Creates a channel node and links it the parent group
   async deleteChannel(channelUuid: string, groupId: Integer) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
@@ -519,8 +529,6 @@ class DB {
           tx.run(writeQuery, { groupId, channelUuid })
         );
         console.log("DELETED CHANNEL FOR: ", groupId, "<-", channelUuid);
-
-        // await sendCreateGroupJob(groupName, user1Email)
       } catch (error) {
         console.error(`Something went wrong: ${error}`);
         reject(error);
@@ -532,19 +540,19 @@ class DB {
   }
 
   // Saves when user joins a channel to neo4j, links user's node to channel when user joins
-  async joinChannel(userEmail: String, channelUuid: String) {
+  async joinChannel(userId: String, channelUuid: String) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
-      console.log(userEmail, channelUuid)
+      console.log(userId, channelUuid)
       try {
-        const writeQuery = `MATCH (u:User {email: $userEmail})
+        const writeQuery = `MATCH (u:User) WHERE elementID(u) = $userId
         MATCH (c:Channel {channelUuid: $channelUuid})
         MERGE (u)-[r:CHANNELMEMBER]->(c)
         RETURN u, c`;
 
         const writeResult = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { userEmail, channelUuid })
+          tx.run(writeQuery, { userId, channelUuid })
         );
 
         console.log(writeResult);
@@ -559,23 +567,23 @@ class DB {
   }
 
   // Removes user's link to channel when user leaves a channel
-  async leaveAllChannels(userEmail: String) {
+  async leaveAllChannels(userId: String) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const writeQuery = `MATCH (u:User {email: $userEmail})
+        const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId
         MATCH (c:Channel)
         MATCH (u)-[r:CHANNELMEMBER]->(c)
         DELETE r
         RETURN u, c`;
 
         const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { userEmail })
+        tx.run(writeQuery, { userId })
         );
 
       } catch (err) {
-        console.log("leaveAllChannels FAILED", userEmail);
+        console.log("leaveAllChannels FAILED", userId);
         reject(err);
       } finally {
         await session.close();

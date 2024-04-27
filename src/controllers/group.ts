@@ -6,12 +6,13 @@ import {randomUUID} from "crypto";
 import {Namespace, Socket} from "socket.io";
 
 const createGroup = async (req: Request, res: Response, next: NextFunction) => {
-    const { groupName, user1Email } = req.body;
+    const { groupName } = req.body;
+    const userId: string = req.header("x-user")
 
     const groupId: string = randomUUID().toString();
     console.log(`New group: ${groupId}`);
     const db = DB.getInstance();
-    db.createGroup(groupId, groupName, user1Email)
+    db.createGroup(groupId, groupName, userId)
       .then((value) => {
         res.json(value);
       })
@@ -22,10 +23,10 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
 
 
 const getGroups = (req: Request, res: Response, next: NextFunction) => {
-    const { user1Email } = req.params;
+    const userId: string = req.header("x-user");
 
     const db = DB.getInstance();
-    db.getGroups(user1Email)
+    db.getGroups(userId)
         .then((value) => {
             console.log('getGroupController', value)
         res.json(value);
@@ -50,10 +51,11 @@ const getMembers = (req: Request, res: Response, next: NextFunction) => {
 }
 
 const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunction) => {
-    const { user1Email, groupId } = req.params;
+    const { groupId } = req.params;
+    const userId: string = req.header("x-user")
 
     const db = DB.getInstance();
-    db.getFriendsWhoAreNotMembers(user1Email, groupId)
+    db.getFriendsWhoAreNotMembers(userId, groupId)
         .then((value) => {
             res.json(value);
         })
@@ -84,11 +86,11 @@ class GroupsController {
       
     }
   
-    async addMember(senderEmail: string, recipientEmail: string, groupId: string) {
+    async addMember(senderId: string, recipientId: string, groupId: string) {
         const db = DB.getInstance();
         try {
-            const value = await db.addMemberToGroup(recipientEmail, groupId);
-            this.notificationNamespace.to(groupId).emit('globalNotification', `${senderEmail} added ${recipientEmail} to the group!`)
+            const value = await db.addMemberToGroup(recipientId, groupId);
+            this.notificationNamespace.to(groupId).emit('globalNotification', `${senderId} added ${recipientId} to the group!`)
         } catch (err) {
             console.error(err);
             throw new HttpError(err, 404);
@@ -96,10 +98,10 @@ class GroupsController {
     }
 
     // Add users to a channel when they click on the channel
-    async addUserToChannel(email: string, groupId: string, channelName: string){
+    async addUserToChannel(userId: string, groupId: string, channelName: string){
         const db = DB.getInstance();
         try {
-            const value = await db.joinChannel(email, groupId+channelName);
+            const value = await db.joinChannel(userId, groupId+channelName);
         } catch (err) {
             console.error(err);
             throw new HttpError(err, 404);
@@ -107,18 +109,18 @@ class GroupsController {
     }
 
     // Disconnect user from all channels
-    async disconnectUserFromChannels(email: string) {
+    async disconnectUserFromChannels(userId: string) {
         const db = DB.getInstance();
         try {
-            const value = await db.leaveAllChannels(email);
+            const value = await db.leaveAllChannels(userId);
         } catch (err) {
             console.error(err);
             throw new HttpError(err, 404);
         }
     }
 
-    deleteSocket(email: any) {
-        this.userSockets.delete(email)
+    deleteSocket(userId: any) {
+        this.userSockets.delete(userId)
     }
 }
 

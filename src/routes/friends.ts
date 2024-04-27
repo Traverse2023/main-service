@@ -1,4 +1,4 @@
-import express, {Router, Request, Response} from 'express'
+import  {Router} from 'express'
 import {
     acceptFriendRequest,
     addFriend,
@@ -13,62 +13,58 @@ import {
 import { checkAuth } from '../utils/check-auth.js'
 import {Namespace} from "socket.io";
 
-const router = Router()
+const router = Router();
 
-router.get("/", addFriend)
+router.get("/", addFriend);
 
-router.use(checkAuth)
+router.use(checkAuth);
 
-router.get('/getFriendRequests/:userEmail', getFriendRequests)
-router.get('/getFriends/:user1Email', getFriends)
-router.get('/getMutualFriends/:user1Email/:user2Email', getMutualFriends)
-router.get('/getFriendshipStatus/:user1Email/:user2Email', getFriendshipStatus)
-
-router.get('/removeFriendRequest/:user1Email/:user2Email', removeFriendRequest)
-
-// router.post('/sendFriendRequest', sendFriendRequest)
-router.post('/acceptFriendRequest', acceptFriendRequest)
+router.get('/getFriendRequests', getFriendRequests);
+router.get('/getFriends', getFriends);
+router.get('/getMutualFriends/:friendUserId', getMutualFriends);
+router.get('/getFriendshipStatus/:friendUserId', getFriendshipStatus);
+router.get('/removeFriendRequest/:friendUserId', removeFriendRequest);
+router.post('/sendFriendRequest/:friendUserId', sendFriendRequest);
+router.post('/acceptFriendRequest/:friendUserId', acceptFriendRequest);
 
 const friendsRouter = (friendsNamespace: Namespace, notificationNamespace: Namespace, io) => {
     const friendsController = FriendsController.getInstance(io);
 
     friendsNamespace.on('connection', (socket) => {
-        const id = socket.handshake.query.email as string;
-        console.log('Friends connection', id);
-        friendsController.registerSocket(id, socket);
+        const userId = socket.handshake.query.userId as string;
+        console.log('Friends connection', userId);
+        friendsController.registerSocket(userId, socket);
 
         socket.on('disconnect', () => {
-            const disconnectingUserEmail = socket.handshake.query.email
-            // friendsController.getUserSockets().delete(disconnectingUserEmail, socket)
-            console.log(`Disconnecting user ${disconnectingUserEmail} from friends`)
+            const disconnectingUserId = socket.handshake.query.userId
+            // friendsController.getUserSockets().delete(disconnectingUserId, socket)
+            console.log(`Disconnecting user ${disconnectingUserId} from friends`)
         })
 
         socket.on("connect_error", (err) => {
             console.log(`connect_error due to ${err.message}`);
         });
 
-        socket.on('unfriend', (recipientEmail) => {
-            console.log('43 unfriend', recipientEmail)
-            friendsController.unfriend(id, recipientEmail).then((val) => {
-
-            })
+        socket.on('unfriend', (recipientId) => {
+            console.log('43 unfriend', recipientId)
+            friendsController.unfriend(userId, recipientId).then(r => console.log("Unfriended"))
         });
 
-        socket.on('sendFriendRequest', (recipientEmail) => {
-            friendsController.sendFriendRequest(id, recipientEmail).then((val)=>{
+        socket.on('sendFriendRequest', (recipientId) => {
+            friendsController.sendFriendRequest(userId, recipientId).then((val)=>{
                 console.log('routesfriends38', val)
             });
         });
 
-        socket.on('declineFriendRequest', (recipientEmail) => {
+        socket.on('declineFriendRequest', (recipientId) => {
             console.log('here52declineReq')
-            friendsController.declineFriendRequest(id, recipientEmail).then((val)=>{
+            friendsController.declineFriendRequest(userId, recipientId).then((val)=>{
                 // console.log('routesfriends38', val)
             });
         });
 
-        socket.on('acceptFriendRequest', (recipientEmail) => {
-            friendsController.acceptFriendRequest(id, recipientEmail).then((val)=>{
+        socket.on('acceptFriendRequest', (recipientId) => {
+            friendsController.acceptFriendRequest(userId, recipientId).then((val)=>{
                 // console.log('routesfriends38', val)
             });
         });

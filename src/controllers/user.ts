@@ -3,9 +3,10 @@ import { HttpError } from '../utils/http-error.js'
 import DB from '../utils/db.js'
 
 const savePFP = (req: Request, res: Response, next: NextFunction) => {
-    const {user1Email, pfpURL} = req.body
+    const userId: string = req.header("x-user")
+    const { pfpURL} = req.body
     const db = DB.getInstance()
-    db.savePFP(user1Email, pfpURL).then(value => {
+    db.savePFP(userId, pfpURL).then(value => {
         console.log(value);
         res.json(value)
     }).catch(err => {

@@ -2,10 +2,13 @@ import DB from './utils/db.js'
 import bcrypt from "bcryptjs";
 import StorageService from "./utils/storage-service.js";
 import {randomUUID} from "crypto";
+import AuthService from "./utils/auth-service.js";
+import User from "./types/user.js";
+import user from "./types/user.js";
 
 const db = DB.getInstance()
 
-const storageService: StorageService = StorageService.getInstance();
+const authService: AuthService = AuthService.getInstance();
 
 const clear = () => {
     return new Promise((resolve, reject) => {
@@ -19,127 +22,134 @@ const createUniqueUserConstraint = () => {
     })
 }
 
-const createUsers = async () => {
-    try {
-        const hashedPassword = await bcrypt.hash("123", 12);
 
-        const response = await Promise.all([
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Isfar",
-                    lastName: "Oshir",
-                    email: "ioshir@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("ioshir@traverse.zone");
+const createUsers = async (): Promise<string[]> => {
+    try {
+        const plainTextPassword: string = "123";
+
+        const response: string[] = await Promise.all([
+            new Promise<string>((resolve, reject) => {
+                authService.createUser(new User(
+                    "ioshir@traverse.zone",
+                    plainTextPassword,
+                    "Isfar",
+                    "Oshir",
+                )).then( user => {
+                    console.log(`Created user: ${user}`)
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Farhan",
-                    lastName: "Mashud",
-                    email: "fmashud@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("fmashud@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser(new User(
+                    "fmashud@traverse.zone",
+                    plainTextPassword,
+                    "Farhan",
+                    "Mashud",
+                    )).then( user => {
+                    console.log(`Created user: ${user}`);
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Bryan",
-                    lastName: "Palomo",
-                    email: "bpalomo@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("bpalomo@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser(new User(
+                    "bpalomo@traverse.zone",
+                    plainTextPassword,
+                    "Bryan",
+                    "Palomo"
+                )).then( user => {
+                    console.log(`Created user: ${user}`);
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Junming",
-                    lastName: "Qiu",
-                    email: "jqiu@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("jqiu@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser(new User(
+                    "jqiu@traverse.zone",
+                    plainTextPassword,
+                    "Junming",
+                    "Qiu",
+                )).then( user => {
+                    console.log(`Created user: ${user}`);
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Ahmed",
-                    lastName: "Imran",
-                    email: "aimran@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("aimran@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser( new User(
+                    "aimran@traverse.zone",
+                    plainTextPassword,
+                    "Ahmed",
+                    "Imran",
+                )).then( user => {
+                    console.log(`Created user: ${user}`);
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Ahmed",
-                    lastName: "Rahi",
-                    email: "arahi@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("arahi@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser(new User(
+                    "arahi@traverse.zone",
+                    plainTextPassword,
+                    "Ahmed",
+                    "Rahi"
+                )).then( user => {
+                    console.log(`Created user: ${user}`);
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Hamza",
-                    lastName: "Ali",
-                    email: "hali@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("hali@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser( new User(
+                    "hali@traverse.zone",
+                    plainTextPassword,
+                    "Hamza",
+                    "Ali"
+
+                )).then( user => {
+                    console.log(`Created user: ${user}`)
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Carlos",
-                    lastName: "Maranon",
-                    email: "cmaranon@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("cmaranon@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser( new User(
+                    "cmaranon@traverse.zone",
+                    plainTextPassword,
+                    "Carlos",
+                    "Maranon",
+                )).then( user => {
+                    console.log(`Created user: ${user}`)
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise((resolve, reject) => {
-                db.createUser({
-                    firstName: "Srinath",
-                    lastName: "Srinivasan",
-                    email: "ssrinivasan@traverse.zone",
-                    password: hashedPassword
-                }).then( _ => {
-                    resolve("ssrinivasan@traverse.zone");
+            new Promise<string>((resolve, reject) => {
+                authService.createUser(new User(
+                    "Srinath",
+                    "Srinivasan",
+                    "ssrinivasan@traverse.zone",
+                    plainTextPassword
+                    )).then( user => {
+                    console.log(`Created user: ${user}`)
+                    resolve(user.id);
                 }).catch(err => reject(err));
             }),
         ]);
-        console.log(response, 'response')
         return response
     } catch (err) {
         return err;
     }
 }
 
-const addUsersToGroup = async (groupId: String, createUsersResponse) => {
-    let members = createUsersResponse
-    members = members.filter(email => email !== "bpalomo@traverse.zone")
+const addUsersToGroup = async (groupId: string, users: string[]) => {
     try {
-        for (const memberEmail of members) {
-            const res = await db.addMemberToGroup(memberEmail, groupId);
-            console.log("User added to group: ", memberEmail);
+        for (const userId of users) {
+            const res = await db.addMemberToGroup(userId, groupId);
+            console.log(`User ${userId} added to group ${groupId}`, res);
         }
-
     } catch (err) {
         console.log(err);
     }
 }
 
-const createMainGroup = async (groupName: String, groupUUID: String) => {
-    await db.createGroup(groupUUID, groupName, "bpalomo@traverse.zone");
-}
 
+const createMainGroup = async (groupName: string, userId: string): Promise<string> => {
+    return await db.createGroup(groupName, userId);
+}
 
 
 const script = async () => {
@@ -148,12 +158,12 @@ const script = async () => {
         console.log(clearResponse);
         //const userConstraint = await createUniqueUserConstraint();
         console.log("Loading seed data...");
-        const createUsersResponse = await createUsers();
-        console.log(createUsersResponse);
-        const groupId = randomUUID().toString();
-        const name = "Traverse Admins"
-        await createMainGroup(name, groupId);
-        await addUsersToGroup(groupId, createUsersResponse);
+        const usersCreatedIds: string[] = await createUsers();
+        console.log(usersCreatedIds);
+        const creatingUser: string = usersCreatedIds.pop();
+        const groupName: string = "Traverse Admins";
+        const groupId: string = await createMainGroup(groupName, creatingUser);
+        await addUsersToGroup(groupId, usersCreatedIds);
         console.log("Seed-script executed successfully.");
     } catch (err) {
         console.log("Seed-script failed: ", err);

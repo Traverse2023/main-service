@@ -2,12 +2,10 @@ import express, { Express, Request, Response } from 'express'
 
 import { router as friendRoutes} from './routes/friends.js'
 import { router as chatRoutes } from './routes/chats.js'
-import { router as authRoutes} from './routes/auth.js'
 import { router as searchRoutes } from './routes/search.js'
 import {router as userRoutes} from './routes/user.js'
 import {groupsRouter, router as groupRoutes} from './routes/group.js'
-import pkg from 'agora-access-token'
-import { v4 as uuidv4 } from 'uuid';
+import pkg from 'agora-token';
 const { RtcTokenBuilder, RtcRole } = pkg
 import * as http from "http";
 import {Server} from "socket.io";
@@ -50,28 +48,25 @@ function hashStringToInteger(str) {
   return Math.abs(hash);
 }
 
-app.get("/getAgoraToken/:email/:channelName", (req, res) => {
+app.get("/getAgoraToken/:channelName", (req, res) => {
   const appId = '056e7ee25ec24b4586f17ec177e121d1';
   const appCertificate = 'aa92b0a26b154fb191a2fd43003bf854'; // Or null if not using certificate
   const channelName = req.params.channelName;
-  const email = req.params.email
-  console.log('channelName', channelName)
-  // const uid = 0
+  const userId = req.header("x-user");
+
   const role = RtcRole.PUBLISHER; // Role of the user (publisher, subscriber)
   const expirationTimeInSeconds = 3600; // 1 hour expiration time
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
-  const uid = uuidv4()
-  const uidInt = hashStringToInteger(uid)
-  // const uidInt = Math.floor(Math.random() * 1000000)
-  console.log('uidInt', uidInt)
-  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, uidInt, role, privilegeExpiredTs);
-  console.log('Agora Token:', token, 'uid' , uid);
+  const expiration = currentTimestamp + expirationTimeInSeconds;
+  const userIdInt = hashStringToInteger(userId);
+  console.log('uidInt', userIdInt);
+  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, userId, role, expiration, expiration);
+  console.log('Agora Token:', token, 'uid' , userIdInt);
 
-  res.json({token: token, uid: uidInt, email: email})
+  res.json({token: token, uid: userIdInt})
 })
 
-app.use("/api/auth", authRoutes)
+
 app.use("/api/user", userRoutes)
 app.use("/api/group", groupRoutes)
 app.use("/api/search", searchRoutes)
