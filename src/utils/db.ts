@@ -369,9 +369,9 @@ class DB {
       // await sendCreateGroupJob(groupName, user1Email)
       // Currently initializes channels when a group is created
       // TODO: Replace this with code to add channels through the add channel button
-      this.createChannel("general", groupId)
-      this.createChannel("announcements", groupId)
-      this.createChannel("events", groupId)
+      this.createChannel(groupId, "general");
+      this.createChannel(groupId, "announcements");
+      this.createChannel(groupId, "events");
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
@@ -477,9 +477,9 @@ class DB {
   }
   
   // Creates a channel node and links it the the parent group
-  // channelUuid is channelName#groupId
-  async createChannel(channelName: String, groupId: String) {
-    const channelUuid : String = channelName.toString() + "#" + groupId.toString();
+  // channelUuid is groupId#channelName
+  async createChannel(groupId: String, channelName: String) {
+    const channelUuid : String =  groupId.toString() + "#" + channelName.toString();
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
 
