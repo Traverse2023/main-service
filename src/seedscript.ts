@@ -1,6 +1,7 @@
 import DB from './utils/db.js'
 import bcrypt from "bcryptjs";
 import StorageService from "./utils/storage-service.js";
+import {randomUUID} from "crypto";
 
 const db = DB.getInstance()
 
@@ -30,7 +31,7 @@ const createUsers = async () => {
                     email: "ioshir@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Isfar");
+                    resolve("ioshir@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -40,7 +41,7 @@ const createUsers = async () => {
                     email: "fmashud@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Farhan");
+                    resolve("fmashud@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -50,7 +51,7 @@ const createUsers = async () => {
                     email: "bpalomo@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Bryan");
+                    resolve("bpalomo@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -60,7 +61,7 @@ const createUsers = async () => {
                     email: "jqiu@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Junming");
+                    resolve("jqiu@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -70,7 +71,7 @@ const createUsers = async () => {
                     email: "aimran@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Ahmed I");
+                    resolve("aimran@traverse.zone");
                 }).catch(err => reject(err));
             }),
             new Promise((resolve, reject) => {
@@ -80,66 +81,56 @@ const createUsers = async () => {
                     email: "arahi@traverse.zone",
                     password: hashedPassword
                 }).then( _ => {
-                    resolve("Ahmed R");
+                    resolve("arahi@traverse.zone");
                 }).catch(err => reject(err));
-            })
+            }),
+            new Promise((resolve, reject) => {
+                db.createUser({
+                    firstName: "Hamza",
+                    lastName: "Ali",
+                    email: "hali@traverse.zone",
+                    password: hashedPassword
+                }).then( _ => {
+                    resolve("hali@traverse.zone");
+                }).catch(err => reject(err));
+            }),
+            new Promise((resolve, reject) => {
+                db.createUser({
+                    firstName: "Carlos",
+                    lastName: "Maranon",
+                    email: "cmaranon@traverse.zone",
+                    password: hashedPassword
+                }).then( _ => {
+                    resolve("cmaranon@traverse.zone");
+                }).catch(err => reject(err));
+            }),
+            new Promise((resolve, reject) => {
+                db.createUser({
+                    firstName: "Srinath",
+                    lastName: "Srinivasan",
+                    email: "ssrinivasan@traverse.zone",
+                    password: hashedPassword
+                }).then( _ => {
+                    resolve("ssrinivasan@traverse.zone");
+                }).catch(err => reject(err));
+            }),
         ]);
-        return "Following Users Created: " + response.join();
+        console.log(response, 'response')
+        return response
     } catch (err) {
         return err;
     }
 }
 
-// const createFriendships = async () => {
-//     try {
-//
-//         const user1Email = "isfaroshir@gmail.com"
-//         const user2Email = "fmash@gmail.com"
-//         const user3Email = "bp@gmail.com"
-//         await db.createFriendship(user1Email, user2Email)
-//         await db.createFriendship(user2Email, user3Email)
-//         return `Created friendship between ${user1Email} and ${user2Email} and ${user3Email} and ${user2Email}`
-//
-//     } catch(error) { return error }
-// }
-
-// const createFriendRequests = async () => {
-//     try {
-//         await Promise.all([
-//             db.createFriendRequest("bp@gmail.com", "fmash@gmail.com"),
-//             db.createFriendRequest("bp@gmail.com", "isfaroshir@gmail.com")
-//         ])
-//         return "Friend request from bp@gmail.com successfully sent to fmash@gmail.com & isfaroshir@gmail.com"
-//     } catch (error) { return error }
-// }
-
-
-const addUsersToGroup = async (groupId: String) => {
-    const members: String[] = [
-        'ioshir@traverse.zone',
-        'fmashud@traverse.zone',
-        'jqiu@traverse.zone',
-        'aimran@traverse.zone',
-        'arahi@traverse.zone',
-    ];
+const addUsersToGroup = async (groupId: String, createUsersResponse) => {
+    let members = createUsersResponse
+    members = members.filter(email => email !== "bpalomo@traverse.zone")
     try {
         for (const memberEmail of members) {
             const res = await db.addMemberToGroup(memberEmail, groupId);
             console.log("User added to group: ", memberEmail);
         }
 
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-const createStorageGroup = async () => {
-    const groupName: String = "TraverseAdmins";
-    const userEmail: String = "bpalomo@traverse.zone";
-    try{
-        const storageResponse = await storageService.createGroup(groupName);
-        console.log("Group created in storage-service: ", storageResponse.data);
-        return storageResponse.data;
     } catch (err) {
         console.log(err);
     }
@@ -159,10 +150,10 @@ const script = async () => {
         console.log("Loading seed data...");
         const createUsersResponse = await createUsers();
         console.log(createUsersResponse);
-        const storageResponseData = await createStorageGroup();
-        const { name, id} = storageResponseData;
-        await createMainGroup(name, id);
-        await addUsersToGroup(id);
+        const groupId = randomUUID().toString();
+        const name = "Traverse Admins"
+        await createMainGroup(name, groupId);
+        await addUsersToGroup(groupId, createUsersResponse);
         console.log("Seed-script executed successfully.");
     } catch (err) {
         console.log("Seed-script failed: ", err);

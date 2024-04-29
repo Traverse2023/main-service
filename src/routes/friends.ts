@@ -11,6 +11,7 @@ import {
     sendFriendRequest
 } from '../controllers/friends.js'
 import { checkAuth } from '../utils/check-auth.js'
+import {Namespace} from "socket.io";
 
 const router = Router()
 
@@ -28,19 +29,18 @@ router.get('/removeFriendRequest/:user1Email/:user2Email', removeFriendRequest)
 // router.post('/sendFriendRequest', sendFriendRequest)
 router.post('/acceptFriendRequest', acceptFriendRequest)
 
-const friendsRouter = (friendsNamespace) => {
-    const friendsController = new FriendsController(friendsNamespace);
+const friendsRouter = (friendsNamespace: Namespace, notificationNamespace: Namespace, io) => {
+    const friendsController = FriendsController.getInstance(io);
 
     friendsNamespace.on('connection', (socket) => {
-        const email = socket.handshake.query.email
-        friendsController.registerSocket(email, socket)
-        console.log('36friendsconnection', email)
-
+        const id = socket.handshake.query.email as string;
+        console.log('Friends connection', id);
+        friendsController.registerSocket(id, socket);
 
         socket.on('disconnect', () => {
             const disconnectingUserEmail = socket.handshake.query.email
             // friendsController.getUserSockets().delete(disconnectingUserEmail, socket)
-            console.log(`Disconnecting user ${disconnectingUserEmail}`)
+            console.log(`Disconnecting user ${disconnectingUserEmail} from friends`)
         })
 
         socket.on("connect_error", (err) => {
@@ -49,26 +49,26 @@ const friendsRouter = (friendsNamespace) => {
 
         socket.on('unfriend', (recipientEmail) => {
             console.log('43 unfriend', recipientEmail)
-            friendsController.unfriend(email, recipientEmail).then((val) => {
+            friendsController.unfriend(id, recipientEmail).then((val) => {
 
             })
         });
 
         socket.on('sendFriendRequest', (recipientEmail) => {
-            friendsController.sendFriendRequest(email, recipientEmail).then((val)=>{
-                // console.log('routesfriends38', val)
+            friendsController.sendFriendRequest(id, recipientEmail).then((val)=>{
+                console.log('routesfriends38', val)
             });
         });
 
         socket.on('declineFriendRequest', (recipientEmail) => {
             console.log('here52declineReq')
-            friendsController.declineFriendRequest(email, recipientEmail).then((val)=>{
+            friendsController.declineFriendRequest(id, recipientEmail).then((val)=>{
                 // console.log('routesfriends38', val)
             });
         });
 
         socket.on('acceptFriendRequest', (recipientEmail) => {
-            friendsController.acceptFriendRequest(email, recipientEmail).then((val)=>{
+            friendsController.acceptFriendRequest(id, recipientEmail).then((val)=>{
                 // console.log('routesfriends38', val)
             });
         });

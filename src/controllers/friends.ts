@@ -1,6 +1,11 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
+import {Namespace, Server, Socket} from "socket.io";
+// @ts-ignore
+import {DefaultEventsMap} from "socket.io/dist/typed-events.js";
+import {NotificationsController} from "./notifications.js";
+
 
 const addFriend = (req: Request, res: Response) => {
   // #swagger.tags = ['Friends']
@@ -97,30 +102,36 @@ const removeFriendRequest = async(
 };
 
 class FriendsController {
-  private io
-  private userSockets
-  constructor(io) {
-    this.io = io;
+
+  public static instance: FriendsController;
+  private userSockets: Map<String, Socket>;
+  private notificationNamespace: Namespace;
+  private notificationsController: NotificationsController;
+  constructor(io: Server< Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>>) {
     this.userSockets = new Map();
+    this.notificationNamespace = io.of("/notifications");
+    this.notificationsController = NotificationsController.getInstance(io);
+  }
+  public static getInstance(io: Server< Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>>): FriendsController {
+    if (!FriendsController.instance) {
+      FriendsController.instance = new FriendsController(io);
+    }
+    return FriendsController.instance;
   }
 
-  registerSocket(email, givenSocket) {
+  registerSocket(email: string, givenSocket: Socket) {
     this.userSockets.set(email, givenSocket)
-    // console.log(this.userSockets.keys())
   }
 
-  sendGlobalNotification(recipientSocket, notification) {
-
-    console.log(notification, recipientSocket);
-
-    recipientSocket.emit('globalNotification', notification)
-  }
-
-  async sendFriendRequest(senderEmail, recipientEmail) {
+  async sendFriendRequest(senderEmail: string, recipientEmail: string) {
     const recipientSocket = this.userSockets.get(recipientEmail);
+    const notificationsRecipientSocket = this.notificationsController.getUserSocketById(recipientEmail)
     const db = DB.getInstance()
     try {
       const value = await db.createFriendRequest(senderEmail, recipientEmail);
+      if (notificationsRecipientSocket) {
+        this.notificationNamespace.in(notificationsRecipientSocket.id).emit('globalNotification', "friendRequest")
+      }
       if (recipientSocket) {
         console.log("Sending friend req to", recipientEmail)
         recipientSocket.emit('receiveFriendRequest', senderEmail);
@@ -133,16 +144,22 @@ class FriendsController {
     }
   }
 
-  async acceptFriendRequest(senderEmail, recipientEmail) {
+  async acceptFriendRequest(senderEmail: string, recipientEmail: string) {
     const recipientSocket = this.userSockets.get(recipientEmail);
+    const notificationsRecipientSocket = this.notificationsController.getUserSocketById(recipientEmail)
     const db = DB.getInstance()
     try {
+      // TODO: //create notification
       const value = await db.createFriendship(senderEmail, recipientEmail);
+      console.log(`Friendship created: ${value}, ${senderEmail}, ${recipientEmail}`);
+      if (notificationsRecipientSocket) {
+        this.notificationNamespace.in(notificationsRecipientSocket.id).emit('globalNotification', "friendRequestAccepted");
+      }
       if (recipientSocket) {
         console.log("Sending accepted friend request notification to", recipientEmail)
         recipientSocket.emit('receiveAcceptFriendRequest', senderEmail);
       } else {
-
+        console.log("acceptFriendRequest no socket found...");
       }
     } catch (err) {
       console.error(err);
@@ -150,11 +167,11 @@ class FriendsController {
     }
   }
 
-  async declineFriendRequest(senderEmail, recipientEmail) {
+  async declineFriendRequest(senderEmail: string, recipientEmail: string) {
     const recipientSocket = this.userSockets.get(recipientEmail);
-    const db = DB.getInstance()
+    const db = DB.getInstance();
     try {
-      const value = await db.removeFriendRequest(senderEmail, recipientEmail)
+      const value = await db.removeFriendRequest(senderEmail, recipientEmail);
       if (recipientSocket) {
         recipientSocket.emit('receiveDeclineFriendRequest', senderEmail)
       }
@@ -163,8 +180,8 @@ class FriendsController {
     }
   }
 
-  async unfriend(senderEmail, recipientEmail) {
-    console.log("inunfriendController")
+  async unfriend(senderEmail: string, recipientEmail: string) {
+    console.log("inUnfriendController")
     const recipientSocket = this.userSockets.get(recipientEmail);
     console.log(recipientSocket)
     const db = DB.getInstance()
