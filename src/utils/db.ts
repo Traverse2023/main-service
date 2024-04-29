@@ -477,7 +477,7 @@ class DB {
   }
   
   // Creates a channel node and links it the the parent group
-  // channelUuid is groupId+channelName
+  // channelUuid is channelName#groupId
   async createChannel(channelName: String, groupId: String) {
     const channelUuid : String = channelName.toString() + "#" + groupId.toString();
     const session = this.localDriver.session({ database: "neo4j" });
