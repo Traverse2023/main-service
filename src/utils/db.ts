@@ -452,26 +452,34 @@ class DB {
     });
   }
 
-  async addMemberToGroup(user1Email, groupId) {
+  async addMembersToGroup(userEmails: string | string[], groupId: string): Promise<void> {
     const session = this.localDriver.session({ database: "neo4j" });
-    let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const writeQuery = `MATCH (u:User {email: $user1Email})
-                                                        MATCH (g:Group {id: $groupId})
-                                                        CREATE (u)-[r:MEMBER]->(g)
-                                                        RETURN u, g`;
-
-        const writeResult = await session.executeWrite((tx) =>
-            tx.run(writeQuery, { user1Email, groupId })
-        );
+        if (Array.isArray(userEmails)) {
+          for (const userEmail of userEmails) {
+            const writeQuery = `
+                        MATCH (u:User {email: $userEmail})
+                        MATCH (g:Group {id: $groupId})
+                        CREATE (u)-[r:MEMBER]->(g)
+                        RETURN u, g
+                    `;
+            await session.run(writeQuery, { userEmail, groupId });
+          }
+        } else {
+          const writeQuery = `
+                    MATCH (u:User {email: $userEmails})
+                    MATCH (g:Group {id: $groupId})
+                    CREATE (u)-[r:MEMBER]->(g)
+                    RETURN u, g
+                `;
+          await session.run(writeQuery, { userEmails, groupId });
+        }
+        resolve();
       } catch (err) {
         reject(err);
       } finally {
         await session.close();
-        // console.log("178", results);
-
-        resolve(results);
       }
     });
   }

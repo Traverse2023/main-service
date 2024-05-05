@@ -83,13 +83,18 @@ class GroupsController {
       })
       
     }
-  
-    async addMember(senderEmail: string, recipientEmail: string, groupId: string) {
+
+    async addMembers(senderEmail, potentialMembers, groupId, groupsNamespace) {
         const db = DB.getInstance();
         try {
-            const value = await db.addMemberToGroup(recipientEmail, groupId);
-            this.notificationNamespace.to(groupId).emit('globalNotification', `${senderEmail} added ${recipientEmail} to the group!`)
-        } catch (err) {
+            // Assuming db.addMembersToGroup is a method that accepts an array of potential members
+            await db.addMembersToGroup(potentialMembers, groupId);
+            // Emitting to all potential members in the array
+            potentialMembers.forEach(potentialMember => {
+                groupsNamespace.to(groupId).emit('receiveAddedToGroupNotification', senderEmail, potentialMember);
+            });
+        }
+        catch (err) {
             console.error(err);
             throw new HttpError(err, 404);
         }
