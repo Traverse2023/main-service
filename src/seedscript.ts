@@ -122,12 +122,12 @@ const createUsers = async () => {
     }
 }
 
-const addUsersToGroup = async (groupId: String, createUsersResponse) => {
+const addUsersToGroup = async (groupId: string, createUsersResponse: string[]) => {
     let members = createUsersResponse
     members = members.filter(email => email !== "bpalomo@traverse.zone")
     try {
         for (const memberEmail of members) {
-            const res = await db.addMemberToGroup(memberEmail, groupId);
+            const res = await db.addMembersToGroup(memberEmail, groupId);
             console.log("User added to group: ", memberEmail);
         }
 
