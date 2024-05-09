@@ -35,9 +35,9 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
             groupsNamespace.emit('sendMessage', email + 'has disconnected')
         })
 
-        socket.on('addMember', (recipientEmail, groupId) => {
+        socket.on('addMembers', (potentialMembers, groupId) => {
             // console.log('43 unfriend', recipientEmail)
-            groupsController.addMember(email, recipientEmail, groupId).then((val) => {
+            groupsController.addMembers(email, potentialMembers, groupId, groupsNamespace).then((val) => {
             })
         });
 
