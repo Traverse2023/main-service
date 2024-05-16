@@ -1,15 +1,13 @@
+// @ts-ignore
 import {Router} from "express"
 import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
-import { checkAuth } from '../utils/check-auth.js'
 import StorageService from '../utils/storage-service.js';
+// @ts-ignore
 import {Namespace, Socket} from "socket.io";
 
 
 const router = Router();
 const storageService: StorageService = StorageService.getInstance();
-
-// Define API routes
-router.use(checkAuth)
 
 router.get('/getGroups', getGroups);
 
@@ -35,16 +33,14 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
             groupsNamespace.emit('sendMessage', userId + 'has disconnected')
         })
 
-        socket.on('addMember', (recipientId, groupId) => {
+        socket.on('addMember', (recipientId:string, groupId:string) => {
 
             groupsController.addMember(userId, recipientId, groupId).then((val) => {
             })
         });
 
         //join room
-        socket.on("joinRoom", ( groupId ) => {
-            console.log("37", userId, "joined", groupId)
-            // @ts-ignore
+        socket.on("joinRoom", ( groupId: string) => {
             socket.leaveAll()
             groupsController.deleteSocket(userId)
             socket.join(groupId)
@@ -54,7 +50,6 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
         socket.on("joinCall", ( member, groupObj, channelName ) => {
             // Disconnect from any existing channels, if any.
             groupsController.disconnectUserFromChannels(userId);
-            console.log("52", userId, "joinedCall", groupObj.groupId, channelName)
 
             // Add user to new channel
             groupsController.addUserToChannel(userId, groupObj.groupId, channelName)

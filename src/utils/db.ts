@@ -9,9 +9,6 @@ const uri = process.env.NEO4J_URI;
 const user = process.env.NEO4J_USER;
 const password = process.env.NEO4J_PASSWORD;
 
-// const localDriver = driver(uri, auth.basic(user, password), {
-//   disableLosslessIntegers: true,
-// });
 
 interface DB {
   localDriver: any;
@@ -42,7 +39,7 @@ class DB {
       const result = await session.executeWrite(async (tx) => {
         // Cypher query to delete all nodes and relationships
         const query = 'MATCH (n) DETACH DELETE n';
-        return await tx.run(query);
+        return tx.run(query);
       });
 
       console.log('Database cleared successfully.');
@@ -358,7 +355,7 @@ class DB {
     })
   }
 
-  async createGroup(groupName: string, userId: string): Promise<string> {
+  async createGroup(groupName: string, userId: string) {
     const session = this.localDriver.session({ database: "neo4j" });
 
     try {
@@ -370,17 +367,16 @@ class DB {
       const writeResult = await session.executeWrite((tx) =>
         tx.run(writeQuery, { groupName, userId })
       );
-      let ;
-      writeResult.records.forEach(record => {
-        record = record.get("g");
-        console.log("CREATED GROUP: ", createdGroup);
-      });
 
+      const group = writeResult.records.map(record => {
+        record.get("g");
+      });
+      console.log("CREATED GROUP: ", group);
       // Currently initializes channels when a group is created
-      // TODO: Replace this with code to add channels through the add channel button
-      this.createChannel(groupId.toString() + "general", groupId)
-      this.createChannel(groupId.toString() + "announcements", groupId)
-      this.createChannel(groupId.toString() + "events", groupId)
+
+      await this.createChannel("general", group.id)
+      await this.createChannel("announcements", group.id)
+      await this.createChannel("plans", group.id)
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
@@ -488,11 +484,12 @@ class DB {
     });
   }
   
-  // Creates a channel node and links it the the parent group
+  // Creates a channel node and links it the parent group
   // channelUuid is groupId+channelName
-  async createChannel(channelUuid: String, groupId: String) {
+  async createChannel(channelName: string, groupId: string) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
+    const channelUuid = groupId + "#" + channelName;
 
     return new Promise(async (resolve, reject) => {
       try {
@@ -504,7 +501,6 @@ class DB {
         const writeResult = await session.executeWrite((tx) =>
           tx.run(writeQuery, { groupId, channelUuid })
         );
-
         console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
       } catch (error) {
         console.error(`Something went wrong: ${error}`);

@@ -60,7 +60,7 @@ app.get("/getAgoraToken/:channelName", (req, res) => {
   const expiration = currentTimestamp + expirationTimeInSeconds;
   const userIdInt = hashStringToInteger(userId);
   console.log('uidInt', userIdInt);
-  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, userId, role, expiration, expiration);
+  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, userIdInt, role, expiration, expiration);
   console.log('Agora Token:', token, 'uid' , userIdInt);
 
   res.json({token: token, uid: userIdInt})

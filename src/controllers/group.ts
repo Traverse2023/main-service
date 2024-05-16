@@ -1,8 +1,10 @@
+// @ts-ignore
 import { Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
 import StorageService from "../utils/storage-service.js";
 import {randomUUID} from "crypto";
+// @ts-ignore
 import {Namespace, Socket} from "socket.io";
 
 const createGroup = async (req: Request, res: Response, next: NextFunction) => {
@@ -12,7 +14,7 @@ const createGroup = async (req: Request, res: Response, next: NextFunction) => {
     const groupId: string = randomUUID().toString();
     console.log(`New group: ${groupId}`);
     const db = DB.getInstance();
-    db.createGroup(groupId, groupName, userId)
+    db.createGroup(groupName, userId)
       .then((value) => {
         res.json(value);
       })
@@ -39,7 +41,6 @@ const getGroups = (req: Request, res: Response, next: NextFunction) => {
 
 const getMembers = (req: Request, res: Response, next: NextFunction) => {
     const { groupId } = req.params;
-
     const db = DB.getInstance();
     db.getMembers(groupId)
         .then((value) => {

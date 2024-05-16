@@ -1,10 +1,11 @@
+// @ts-ignore
 import {Namespace, Socket} from "socket.io";
-import {checkAuth} from "../utils/check-auth.js";
+// @ts-ignore
 import {Router} from "express";
 import {NotificationsController} from "../controllers/notifications.js";
 
 const router = Router()
-router.use(checkAuth)
+
 const notificationsRouter = (notificationNamespace: Namespace, io) => {
     const notificationsController: NotificationsController = NotificationsController.getInstance(io);
 

@@ -1,6 +1,8 @@
+// @ts-ignore
 import express, { Router, Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
+// @ts-ignore
 import {Namespace, Server, Socket} from "socket.io";
 // @ts-ignore
 import {DefaultEventsMap} from "socket.io/dist/typed-events.js";

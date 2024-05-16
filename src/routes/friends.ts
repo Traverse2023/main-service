@@ -1,3 +1,4 @@
+// @ts-ignore
 import  {Router} from 'express'
 import {
     acceptFriendRequest,
@@ -10,14 +11,12 @@ import {
     removeFriendRequest,
     sendFriendRequest
 } from '../controllers/friends.js'
-import { checkAuth } from '../utils/check-auth.js'
+// @ts-ignore
 import {Namespace} from "socket.io";
 
 const router = Router();
 
 router.get("/", addFriend);
-
-router.use(checkAuth);
 
 router.get('/getFriendRequests', getFriendRequests);
 router.get('/getFriends', getFriends);
@@ -37,7 +36,6 @@ const friendsRouter = (friendsNamespace: Namespace, notificationNamespace: Names
 
         socket.on('disconnect', () => {
             const disconnectingUserId = socket.handshake.query.userId
-            // friendsController.getUserSockets().delete(disconnectingUserId, socket)
             console.log(`Disconnecting user ${disconnectingUserId} from friends`)
         })
 
@@ -45,27 +43,27 @@ const friendsRouter = (friendsNamespace: Namespace, notificationNamespace: Names
             console.log(`connect_error due to ${err.message}`);
         });
 
-        socket.on('unfriend', (recipientId) => {
+        socket.on('unfriend', (recipientId: string) => {
             console.log('43 unfriend', recipientId)
             friendsController.unfriend(userId, recipientId).then(r => console.log("Unfriended"))
         });
 
-        socket.on('sendFriendRequest', (recipientId) => {
+        socket.on('sendFriendRequest', (recipientId: string) => {
             friendsController.sendFriendRequest(userId, recipientId).then((val)=>{
                 console.log('routesfriends38', val)
             });
         });
 
-        socket.on('declineFriendRequest', (recipientId) => {
+        socket.on('declineFriendRequest', (recipientId: string) => {
             console.log('here52declineReq')
             friendsController.declineFriendRequest(userId, recipientId).then((val)=>{
-                // console.log('routesfriends38', val)
+
             });
         });
 
-        socket.on('acceptFriendRequest', (recipientId) => {
+        socket.on('acceptFriendRequest', (recipientId: string) => {
             friendsController.acceptFriendRequest(userId, recipientId).then((val)=>{
-                // console.log('routesfriends38', val)
+
             });
         });
 
