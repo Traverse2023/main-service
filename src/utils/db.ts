@@ -98,15 +98,17 @@ class DB {
 
   async createUser({ firstName, lastName, email, password, pfpURL="https://traverse-profile-pics.s3.amazonaws.com/pfps/blank-pfp.png" }) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
+    const status = 0
     try {
       const writeQuery = `CREATE (u:User { firstName: $firstName,
                                                  lastName: $lastName,
                                                  email: $email,
                                                  password: $password,
-                                                 pfpURL: $pfpURL})`;
+                                                 pfpURL: $pfpURL,
+                                                 status: $status})`;
 
       const writeResult = await session.executeWrite((tx) =>
-        tx.run(writeQuery, { firstName, lastName, email, password, pfpURL })
+        tx.run(writeQuery, { firstName, lastName, email, password, pfpURL, status })
       );
 
       writeResult.records.forEach((record) => {
