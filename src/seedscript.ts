@@ -5,6 +5,7 @@ import {randomUUID} from "crypto";
 import AuthService from "./utils/auth-service.js";
 import User from "./types/user.js";
 import user from "./types/user.js";
+import Group from "./types/group.js";
 
 const db = DB.getInstance()
 
@@ -34,6 +35,7 @@ const createUsers = async (): Promise<string[]> => {
                     plainTextPassword,
                     "Isfar",
                     "Oshir",
+                    ""
                 )).then( user => {
                     console.log(`Created user: ${user}`)
                     resolve(user.id);
@@ -45,6 +47,7 @@ const createUsers = async (): Promise<string[]> => {
                     plainTextPassword,
                     "Farhan",
                     "Mashud",
+                    ""
                     )).then( user => {
                     console.log(`Created user: ${user}`);
                     resolve(user.id);
@@ -55,7 +58,8 @@ const createUsers = async (): Promise<string[]> => {
                     "bpalomo@traverse.zone",
                     plainTextPassword,
                     "Bryan",
-                    "Palomo"
+                    "Palomo",
+                    ""
                 )).then( user => {
                     console.log(`Created user: ${user}`);
                     resolve(user.id);
@@ -67,6 +71,7 @@ const createUsers = async (): Promise<string[]> => {
                     plainTextPassword,
                     "Junming",
                     "Qiu",
+                    ""
                 )).then( user => {
                     console.log(`Created user: ${user}`);
                     resolve(user.id);
@@ -78,6 +83,7 @@ const createUsers = async (): Promise<string[]> => {
                     plainTextPassword,
                     "Ahmed",
                     "Imran",
+                    ""
                 )).then( user => {
                     console.log(`Created user: ${user}`);
                     resolve(user.id);
@@ -88,7 +94,8 @@ const createUsers = async (): Promise<string[]> => {
                     "arahi@traverse.zone",
                     plainTextPassword,
                     "Ahmed",
-                    "Rahi"
+                    "Rahi",
+                    ""
                 )).then( user => {
                     console.log(`Created user: ${user}`);
                     resolve(user.id);
@@ -99,8 +106,8 @@ const createUsers = async (): Promise<string[]> => {
                     "hali@traverse.zone",
                     plainTextPassword,
                     "Hamza",
-                    "Ali"
-
+                    "Ali",
+                    ""
                 )).then( user => {
                     console.log(`Created user: ${user}`)
                     resolve(user.id);
@@ -112,6 +119,7 @@ const createUsers = async (): Promise<string[]> => {
                     plainTextPassword,
                     "Carlos",
                     "Maranon",
+                    ""
                 )).then( user => {
                     console.log(`Created user: ${user}`)
                     resolve(user.id);
@@ -120,9 +128,10 @@ const createUsers = async (): Promise<string[]> => {
             new Promise<string>((resolve, reject) => {
                 authService.createUser(new User(
                     "Srinath",
+                    plainTextPassword,
                     "Srinivasan",
                     "ssrinivasan@traverse.zone",
-                    plainTextPassword
+                    ""
                     )).then( user => {
                     console.log(`Created user: ${user}`)
                     resolve(user.id);
@@ -147,8 +156,10 @@ const addUsersToGroup = async (groupId: string, users: string[]) => {
 }
 
 
-const createMainGroup = async (groupName: string, userId: string): Promise<string> => {
-    return await db.createGroup(groupName, userId);
+const createMainGroup = async (groupName: string, userId: string)  => {
+    const group: Group =  await db.createGroup(groupName, userId);
+    console.log(`Seed-script created group: ${group}`)
+    return group;
 }
 
 
@@ -162,7 +173,8 @@ const script = async () => {
         console.log(usersCreatedIds);
         const creatingUser: string = usersCreatedIds.pop();
         const groupName: string = "Traverse Admins";
-        const groupId: string = await createMainGroup(groupName, creatingUser);
+        const group: Group = await createMainGroup(groupName, creatingUser);
+        const groupId: string = group.groupId;
         await addUsersToGroup(groupId, usersCreatedIds);
         console.log("Seed-script executed successfully.");
     } catch (err) {

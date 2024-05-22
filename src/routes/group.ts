@@ -41,7 +41,7 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
 
         //join room
         socket.on("joinRoom", ( groupId: string) => {
-            socket.leaveAll()
+            socket.rooms.forEach(room => {if (room !== socket.id) {socket.leave(room);}});
             groupsController.deleteSocket(userId)
             socket.join(groupId)
         })

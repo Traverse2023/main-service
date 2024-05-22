@@ -4,27 +4,23 @@ import User from "../types/user.js";
 class AuthService {
 
     private static instance: AuthService;
-    private static baseURL: string = process.env.AUTH_SERVICE_URL;
-    private static registerURI: string = AuthService.baseURL + "/auth/register";
+    private URI: string = process.env.AUTH_SERVICE_URL + "/auth/register"
 
 
     public static getInstance() {
-        console.log("storage-service instance: {}", this.baseURL);
         if (!AuthService.instance) {
             this.instance = new AuthService();
         }
         return this.instance;
     }
 
-    // TODO:
-    // async createUser(user: User): Promise<User> {
-    //     console.log(`Registering user ${user} at URL: ${AuthService.registerURI}`)
-    //     const res = await axios.post(AuthService.registerURI, user)
-    //     console.log(res.data);
-    //     return new User(
-    //
-    //     )
-    // }
+
+    async createUser(user: User): Promise<User> {
+        console.log(`Registering user: ${JSON.stringify(user)}`)
+        const res = await axios.post(this.URI, user)
+        console.log(`Main service  create user: ${res.data}`);
+        return res.data;
+    }
 
 }
 
