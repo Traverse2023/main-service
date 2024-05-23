@@ -7,7 +7,7 @@ class User {
     public lastName: string;
     public pfpUrl: string;
 
-    constructor(username:string, password: string, firstName: string, lastName: string, pfpUrl: string = "", id?: string) {
+    constructor(username:string, firstName: string, lastName: string, pfpUrl: string = "", password?: string, id?: string) {
         this.id = id;
         this.username = username;
         this.password = password;

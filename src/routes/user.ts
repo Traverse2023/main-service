@@ -7,6 +7,6 @@ import {getUser} from "../controllers/search.js";
 const router = Router()
 
 router.post('/savePFP', savePFP);
-router.post('/getUser', getUser);
+router.get('/getUser', getUser);
 
 export { router }

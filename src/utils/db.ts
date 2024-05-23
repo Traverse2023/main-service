@@ -1,6 +1,7 @@
 import {driver, auth, Session, Integer, Record} from "neo4j-driver";
 import dotenv from 'dotenv';
 import Group from "../types/group.js";
+import User from "../types/user.js";
 
 dotenv.config()
 
@@ -97,20 +98,20 @@ class DB {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     return new Promise(async (res, rej) => {
       try {
+        console.log(`Getting user with id: ${userId} from DB`);
         const readQuery = `MATCH (n:User) WHERE elementId(n) = $userId 
         RETURN {id:elementId(n), email:n.username, firstName:n.firstName, lastName:n.lastName, pfpUrl:n.pfpURL } AS user`;
 
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { userId })
         );
-
-        readResult.records.forEach((record: Record) => {
-          // console.log('findUserDB', record.get("user").properties)
-          res(record.get("user").properties);
-        });
-        res({})
+        const user = readResult.records.map((record: Record) => {
+          return record.get("user");
+        })[0];
+        console.log(`Retrieved user: ${user}`);
+        res(user)
       } catch (error) {
-        console.error(`Something went wrong: ${error}`);
+        console.error(`An error occurred when performing getUser: ${error}`);
         rej(error);
       } finally {
         await session.close();
@@ -342,8 +343,10 @@ class DB {
             tx.run(writeQuery, {groupName, userId})
         );
         const group: Group = writeResult.records.map((record: Record) => {
-          new Group(record.get("g").id, record.get("g").groupName);
-        });
+          return new Group(record.get("g").id, record.get("g").groupName);
+        })[0];
+
+        console.log(`Created group ${JSON.stringify(group)}`);
         // Create default channels with new group
         await this.createChannel("general", group.groupId);
         await this.createChannel("announcements", group.groupId);
@@ -385,7 +388,6 @@ class DB {
         reject(err);
       } finally {
         await session.close();
-
       }
     });
   }

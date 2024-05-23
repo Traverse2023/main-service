@@ -28,8 +28,9 @@ const searchUsers =(req: Request, res: Response, next: NextFunction) => {
 const getUser = (req: Request, res: Response, next: NextFunction) => {
     const userId: string = req.header("x-user")
     const db = DB.getInstance()
+    console.log(`Getting user with id ${userId}`)
     db.findUserById(userId).then(value => {
-        console.log(value);
+        console.log(`Retrieved user: ${JSON.stringify(value)}`);
         res.json(value)
     }).catch(err => {
         throw new HttpError(err, 400)
