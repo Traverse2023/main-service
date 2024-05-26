@@ -123,9 +123,9 @@ const createUsers = async (): Promise<string[]> => {
             }),
             new Promise<string>((resolve, reject) => {
                 authService.createUser(new User(
+                    "ssrinivasan@traverse.zone",
                     "Srinath",
                     "Srinivasan",
-                    "ssrinivasan@traverse.zone",
                     "",
                     plainTextPassword,
                     )).then( user => {

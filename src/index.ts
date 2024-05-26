@@ -1,12 +1,10 @@
-import express, { Express, Request, Response } from 'express'
-
-import { router as friendRoutes} from './routes/friends.js'
-import { router as chatRoutes } from './routes/chats.js'
-import { router as searchRoutes } from './routes/search.js'
-import {router as userRoutes} from './routes/user.js'
-import {groupsRouter, router as groupRoutes} from './routes/group.js'
-import pkg from 'agora-token';
-const { RtcTokenBuilder, RtcRole } = pkg
+import express, { Express } from 'express';
+import { router as friendRoutes} from './routes/friends.js';
+import { router as chatRoutes } from './routes/chats.js';
+import { router as searchRoutes } from './routes/search.js';
+import {router as userRoutes} from './routes/user.js';
+import {router as agoraRoutes} from './routes/agora.js';
+import {groupsRouter, router as groupRoutes} from './routes/group.js';
 import * as http from "http";
 import {Server} from "socket.io";
 import {friendsRouter} from "./routes/friends.js";
@@ -37,36 +35,36 @@ app.get("/", (req, res) => {
   res.send("Healthy")
 })
 
-function hashStringToInteger(str) {
-  let hash = 0;
-  if (str.length === 0) return hash;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0; // Convert to 32-bit integer
-  }
-  return Math.abs(hash);
-}
+// function hashStringToInteger(str) {
+//   let hash = 0;
+//   if (str.length === 0) return hash;
+//   for (let i = 0; i < str.length; i++) {
+//     const char = str.charCodeAt(i);
+//     hash = ((hash << 5) - hash) + char;
+//     hash |= 0; // Convert to 32-bit integer
+//   }
+//   return Math.abs(hash);
+// }
 
-app.get("/getAgoraToken/:channelName", (req, res) => {
+app.get("/api/agora/getToken/:channelId", (req, res) => {
   const appId = '056e7ee25ec24b4586f17ec177e121d1';
   const appCertificate = 'aa92b0a26b154fb191a2fd43003bf854'; // Or null if not using certificate
-  const channelName = req.params.channelName;
+  const channelId = req.params.channelId;
   const userId = req.header("x-user");
 
-  const role = RtcRole.PUBLISHER; // Role of the user (publisher, subscriber)
-  const expirationTimeInSeconds = 3600; // 1 hour expiration time
-  const currentTimestamp = Math.floor(Date.now() / 1000);
-  const expiration = currentTimestamp + expirationTimeInSeconds;
-  const userIdInt = hashStringToInteger(userId);
-  console.log('uidInt', userIdInt);
-  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, userIdInt, role, expiration, expiration);
-  console.log('Agora Token:', token, 'uid' , userIdInt);
-
-  res.json({token: token, uid: userIdInt})
+  // const role = RtcRole.PUBLISHER; // Role of the user (publisher, subscriber)
+  // const expirationTimeInSeconds = 3600; // 1 hour expiration time
+  // const currentTimestamp = Math.floor(Date.now() / 1000);
+  // const expiration = currentTimestamp + expirationTimeInSeconds;
+  // const userIdInt = hashStringToInteger(userId);
+  // console.log('uidInt', userIdInt);
+  // const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelId, userIdInt, role, expiration, expiration);
+  // console.log('Agora Token:', token, 'uid' , userIdInt);
+  //
+  // res.json({token: token, uid: userIdInt})
 })
 
-
+app.use("/api/agora", agoraRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/group", groupRoutes)
 app.use("/api/search", searchRoutes)

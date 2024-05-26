@@ -18,7 +18,7 @@ class StorageService {
 
 
     async createNotification(notification) {
-        console.log(`Notification URL: ${StorageService.notificationURI}`)
+        console.log(`Creating notification: ${JSON.stringify(notification)}`);
         const res = await axios.post(StorageService.notificationURI, notification)
         console.log(res.data);
         return res;

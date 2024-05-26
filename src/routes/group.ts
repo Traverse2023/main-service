@@ -109,6 +109,7 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
                 // Create a notification object to be stored and retrieved for all members
                 // not in the live chat or not in the app
                 membersNotInChat.forEach(member => {
+                    console.log(`Member not in chat: ${JSON.stringify(member)}`);
                     const notification = {
                         pk: member.id,
                         chatId: groupId,

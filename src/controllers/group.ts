@@ -2,7 +2,6 @@
 import { Request, Response, NextFunction } from "express";
 import { HttpError } from "../utils/http-error.js";
 import DB from "../utils/db.js";
-import StorageService from "../utils/storage-service.js";
 import {randomUUID} from "crypto";
 // @ts-ignore
 import {Namespace, Socket} from "socket.io";
@@ -30,8 +29,7 @@ const getGroups = (req: Request, res: Response, next: NextFunction) => {
     const db = DB.getInstance();
     db.getGroups(userId)
         .then((value) => {
-            console.log('getGroupController', value)
-        res.json(value);
+            res.json(value);
         })
         .catch((err) => {
         throw new HttpError(err, 400);

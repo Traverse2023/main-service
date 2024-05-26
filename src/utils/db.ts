@@ -368,20 +368,18 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u:User)-[:MEMBER]-(g:Group) WHERE elementId(u) = $userIdRETURN g`;
+        console.log(`Getting groups for user ${userId}`);
+        const readQuery = `MATCH (u:User)-[:MEMBER]-(g:Group) WHERE elementId(u) = $userId RETURN g{.*, id: elementId(g)}`;
 
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { userId })
         );
-
-        readResult.records.forEach((record: Record) => {
-          const group = record.get("g")
-          console.log('dbGetGroup', );
-          results.push({
-            groupName: group.groupName,
-            groupId: group.id
-          });
+        readResult.records.map((record: Record) => {
+          const group: Group =  new Group(record.get("g").id, record.get("g").groupName);
+          results.push(group);
         });
+
+        console.log(`Get groups for user ${userId}: ${JSON.stringify(results)}`, );
         resolve(results);
       } catch (err) {
         console.log(`An error occurred when performing getGroups ${err}`)
@@ -397,18 +395,18 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const readQuery = `MATCH (u:User)-[:MEMBER]->(Group {id: $id})
-                                   RETURN u`;
-
+        const readQuery =
+            `MATCH (u:User)-[:MEMBER]->(g:Group) WHERE elementId(g) = $groupId RETURN {id: elementId(u), username: u.username, firstName: u.firstName, lastName: u.lastName, pfpUrl: u.pfpUrl} as u`;
         const readResult = await session.executeRead((tx) =>
             tx.run(readQuery, { groupId })
         );
-        results = readResult.records.map(record => record["_fields"][0].properties)
+        results = readResult.records.map(record => record.get("u"));
+        console.log(`Get members DB result: ${results}`);
+        resolve(results);
       } catch (err) {
         reject(err);
       } finally {
         await session.close();
-        resolve(results);
       }
     });
   }
@@ -418,23 +416,20 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        // MATCH (g:Group) WHERE elementId(g) = "4:8114b88d-43b4-434e-9f33-cc8a931aa4d3:13"
-        // MATCH (u:User)-[:FRIENDS]-(u2:User)
-        // WHERE elementId(u) = "4:8114b88d-43b4-434e-9f33-cc8a931aa4d3:10" AND NOT (u2)-[:MEMBER]-(g)
-        // RETURN u2
-        const readQuery = `MATCH (u:User)-[:FRIENDS]-(u2:User)
-                                                      WHERE NOT (u)-[:MEMBER]-(:Group {id: $id}) AND elementId(u) = $userId
-                                                      RETURN u`;
+        const readQuery = `MATCH (g:Group) WHERE elementId(g) = $groupId MATCH (u:User)-[:FRIENDS]-(u2:User) WHERE NOT 
+        (u)-[:MEMBER]-(g) AND elementId(u) = $userId RETURN u`;
 
         const readResult = await session.executeRead((tx) =>
             tx.run(readQuery, { userId, groupId })
         );
-        results = readResult.records.map(record => record["_fields"][0].properties)
+        results = readResult.records.map(record => record["_fields"][0].properties);
+        console.log(`Get friends who aren't members result: ${results}`);
+        resolve(results);
+
       } catch (err) {
         reject(err);
       } finally {
         await session.close();
-        resolve(results);
       }
     });
   }
@@ -444,21 +439,18 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId
-                                                        MATCH (g:Group {id: $groupId})
-                                                        CREATE (u)-[r:MEMBER]->(g)
-                                                        RETURN u, g`;
+        const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId 
+        MATCH (g:Group) WHERE elementId(g) = $groupId CREATE (u)-[r:MEMBER]->(g) RETURN u, g`;
 
-        const writeResult = await session.executeWrite((tx) =>
+        await session.executeWrite((tx) =>
             tx.run(writeQuery, { userId, groupId })
         );
+        console.log(`Member ${userId} successfully added to group ${groupId}`);
+        resolve(results);
       } catch (err) {
         reject(err);
       } finally {
         await session.close();
-        // console.log("178", results);
-
-        resolve(results);
       }
     });
   }
@@ -529,8 +521,6 @@ class DB {
         const writeResult = await session.executeWrite((tx) =>
           tx.run(writeQuery, { userId, channelUuid })
         );
-
-        console.log(writeResult);
 
       } catch (err) {
         reject(err);
