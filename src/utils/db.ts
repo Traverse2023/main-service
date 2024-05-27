@@ -1,7 +1,6 @@
 import {driver, auth, Session, Integer, Record} from "neo4j-driver";
 import dotenv from 'dotenv';
 import Group from "../types/group.js";
-import User from "../types/user.js";
 
 dotenv.config()
 
@@ -378,7 +377,6 @@ class DB {
           const group: Group =  new Group(record.get("g").id, record.get("g").groupName);
           results.push(group);
         });
-
         console.log(`Get groups for user ${userId}: ${JSON.stringify(results)}`, );
         resolve(results);
       } catch (err) {
@@ -390,10 +388,12 @@ class DB {
     });
   }
 
+
   async getMembers(groupId: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
+      console.log(`Getting members for group ${groupId}`)
       try {
         const readQuery =
             `MATCH (u:User)-[:MEMBER]->(g:Group) WHERE elementId(g) = $groupId RETURN {id: elementId(u), username: u.username, firstName: u.firstName, lastName: u.lastName, pfpUrl: u.pfpUrl} as u`;
@@ -403,7 +403,28 @@ class DB {
         results = readResult.records.map(record => record.get("u"));
         console.log(`Get members DB result: ${results}`);
         resolve(results);
+
       } catch (err) {
+        reject(err);
+      } finally {
+        await session.close();
+      }
+    });
+  }
+
+  async addMemberToGroup(userId: string, groupId: string): Promise<void> {
+    const session = this.localDriver.session({ database: "neo4j" });
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `
+                          MATCH (u:User) WHERE elementId(u) = $userId
+                          MATCH (g:Group) WHERE elementId(g) = $groupId
+                          CREATE (u)-[r:MEMBER]->(g)
+                          RETURN u, g`;
+        await session.run(writeQuery, {userId, groupId});
+        resolve();
+      } catch (err) {
+        console.log(`An error occurred when performing addMembersToGroup: ${err.message}`);
         reject(err);
       } finally {
         await session.close();
@@ -425,7 +446,6 @@ class DB {
         results = readResult.records.map(record => record["_fields"][0].properties);
         console.log(`Get friends who aren't members result: ${results}`);
         resolve(results);
-
       } catch (err) {
         reject(err);
       } finally {
@@ -434,27 +454,7 @@ class DB {
     });
   }
 
-  async addMemberToGroup(userId: string, groupId: string) {
-    const session = this.localDriver.session({ database: "neo4j" });
-    let results = [];
-    return new Promise(async (resolve, reject) => {
-      try {
-        const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId 
-        MATCH (g:Group) WHERE elementId(g) = $groupId CREATE (u)-[r:MEMBER]->(g) RETURN u, g`;
 
-        await session.executeWrite((tx) =>
-            tx.run(writeQuery, { userId, groupId })
-        );
-        console.log(`Member ${userId} successfully added to group ${groupId}`);
-        resolve(results);
-      } catch (err) {
-        reject(err);
-      } finally {
-        await session.close();
-      }
-    });
-  }
-  
   // Creates a channel node and links it the parent group
   // channelUuid is groupId+channelName
   async createChannel(channelName: string, groupId: string) {
@@ -469,16 +469,17 @@ class DB {
         MERGE (c)-[:CHANNEL]->(g)
         RETURN g, c`;
 
-        const writeResult = await session.executeWrite((tx) =>
+        const response = await session.executeWrite((tx) =>
           tx.run(writeQuery, { groupId, channelUuid })
         );
-        console.log("CREATED CHANNEL FOR: ", groupId, "<-", channelUuid);
+        const newChannel = response.records.map((record) => record.get("c"))
+        console.log(`Created channel: ${newChannel}`);
+        resolve(newChannel);
       } catch (error) {
-        console.error(`Something went wrong: ${error}`);
+        console.error(`An error occurred performing createChannel with channel ${channelUuid}: ${error}`);
         reject(error);
       } finally {
         await session.close();
-        resolve(results);
       }
     })
   }

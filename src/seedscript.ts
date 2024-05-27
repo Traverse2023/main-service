@@ -13,6 +13,7 @@ const clear = () => {
     })
 }
 
+
 const createUniqueUserConstraint = () => {
     return new Promise((resolve, reject) => {
         db.createUserUnique().then(response => resolve(response)).catch(err => reject(err))
@@ -24,127 +25,118 @@ const createUsers = async (): Promise<string[]> => {
     try {
         const plainTextPassword: string = "123";
 
-        const response: string[] = await Promise.all([
+        const users = Promise.all([
             new Promise<string>((resolve, reject) => {
-                authService.createUser(new User(
-                    "ioshir@traverse.zone",
-                    "Isfar",
-                    "Oshir",
-                    "",
-                    plainTextPassword,
-                )).then( user => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "ioshir@traverse.zone",
+                    firstName: "Isfar",
+                    lastName: "Oshir",
+                    password: plainTextPassword,
+                    }
+                ).then(user => {
                     console.log(`Created user: ${JSON.stringify(user)}`)
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
             new Promise<string>((resolve, reject) => {
-                authService.createUser(new User(
-                    "fmashud@traverse.zone",
-                    "Farhan",
-                    "Mashud",
-                    "",
-                    plainTextPassword,
-                    )).then( user => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "fmashud@traverse.zone",
+                    firstName: "Farhan",
+                    lastName: "Mashud",
+                    password: plainTextPassword,
+                    }
+                ).then(user => {
+                    console.log(`Created user: ${user}`);
+                    resolve(user.id);
+                }).catch(err => reject(err));
+            }),
+            new Promise<string>((resolve, reject) => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "bpalomo@traverse.zone",
+                    firstName: "Bryan",
+                    lastName: "Palomo",
+                    password: plainTextPassword,
+                }).then(user => {
                     console.log(`Created user: ${JSON.stringify(user)}`);
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
             new Promise<string>((resolve, reject) => {
-                authService.createUser(new User(
-                    "bpalomo@traverse.zone",
-                    "Bryan",
-                    "Palomo",
-                    "",
-                    plainTextPassword,
-                )).then( user => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "jqiu@traverse.zone",
+                    firstName: "Junming",
+                    lastName: "Qiu",
+                    password: plainTextPassword,
+                }).then(user => {
                     console.log(`Created user: ${JSON.stringify(user)}`);
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
             new Promise<string>((resolve, reject) => {
-                authService.createUser(new User(
-                    "jqiu@traverse.zone",
-                    "Junming",
-                    "Qiu",
-                    "",
-                    plainTextPassword,
-                )).then( user => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "aimran@traverse.zone",
+                    firstName: "Ahmed",
+                    lastName: "Imran",
+                    password: plainTextPassword,
+                }).then(user => {
                     console.log(`Created user: ${JSON.stringify(user)}`);
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
             new Promise<string>((resolve, reject) => {
-                authService.createUser( new User(
-                    "aimran@traverse.zone",
-                    "Ahmed",
-                    "Imran",
-                    "",
-                    plainTextPassword,
-                )).then( user => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "arahi@traverse.zone",
+                    firstName: "Ahmed",
+                    lastName: "Rahi",
+                    password: plainTextPassword,
+                }).then(user => {
                     console.log(`Created user: ${JSON.stringify(user)}`);
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
             new Promise<string>((resolve, reject) => {
-                authService.createUser(new User(
-                    "arahi@traverse.zone",
-                    "Ahmed",
-                    "Rahi",
-                    "",
-                    plainTextPassword,
-                )).then( user => {
-                    console.log(`Created user: ${JSON.stringify(user)}`);
-                    resolve(user.id);
-                }).catch(err => reject(err));
-            }),
-            new Promise<string>((resolve, reject) => {
-                authService.createUser( new User(
-                    "hali@traverse.zone",
-                    "Hamza",
-                    "Ali",
-                    "",
-                    plainTextPassword,
-                )).then( user => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "hali@traverse.zone",
+                    firstName: "Hamza",
+                    lastName: "Ali",
+                    password: plainTextPassword,
+                }).then(user => {
                     console.log(`Created user: ${JSON.stringify(user)}`)
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
             new Promise<string>((resolve, reject) => {
-                authService.createUser( new User(
-                    "cmaranon@traverse.zone",
-                    "Carlos",
-                    "Maranon",
-                    "",
-                    plainTextPassword
-                )).then( user => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "ssrinivasan@traverse.zone",
+                    firstName: "Srinath",
+                    lastName: "Srinivasan",
+                    password: plainTextPassword,
+                }).then(user => {
                     console.log(`Created user: ${JSON.stringify(user)}`)
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
-            new Promise<string>((resolve, reject) => {
-                authService.createUser(new User(
-                    "ssrinivasan@traverse.zone",
-                    "Srinath",
-                    "Srinivasan",
-                    "",
-                    plainTextPassword,
-                    )).then( user => {
-                    console.log(`Created user: ${JSON.stringify(user)}`)
-                    resolve(user.id);
-                }).catch(err => reject(err));
-            }),
-        ]);
-        return response
+        ])
+        console.log(`Users created: ${users}`);
+        return(users);
     } catch (err) {
         return err;
     }
 }
 
-const addUsersToGroup = async (groupId: string, users: string[]) => {
+const addUsersToGroup = async (groupId: string, userIds: string[]) => {
     try {
-        for (const userId of users) {
+        for(const userId in userIds) {
             await db.addMemberToGroup(userId, groupId);
-            console.log(`User ${userId} added to group ${groupId}`);
+            console.log(`User added to group ${groupId}: ${userId}`);
         }
     } catch (err) {
         console.log(err);
@@ -173,6 +165,5 @@ const script = async () => {
         console.log("Seed-script failed with error: ", err);
     }
 }
-
 
 script().then(() => process.exit()).catch(err => console.log(err));

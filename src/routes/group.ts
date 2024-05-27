@@ -33,10 +33,9 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
             groupsNamespace.emit('sendMessage', userId + 'has disconnected')
         })
 
-        socket.on('addMember', (recipientId:string, groupId:string) => {
 
-            groupsController.addMember(userId, recipientId, groupId).then((val) => {
-            })
+        socket.on('addMembers', (potentialMembers, groupId) => {
+            groupsController.addMembers(userId, potentialMembers, groupId).then((val) =>{});
         });
 
         //join room

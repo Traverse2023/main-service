@@ -5,6 +5,7 @@ import DB from "../utils/db.js";
 import {randomUUID} from "crypto";
 // @ts-ignore
 import {Namespace, Socket} from "socket.io";
+import User from "../types/user.js";
 
 const createGroup = async (req: Request, res: Response, next: NextFunction) => {
     const { groupName } = req.body;
@@ -45,6 +46,7 @@ const getMembers = (req: Request, res: Response, next: NextFunction) => {
             res.json(value);
         })
         .catch((err) => {
+            console.log(err.message)
             throw new HttpError(err, 400);
         });
 }
@@ -84,16 +86,18 @@ class GroupsController {
       })
       
     }
-  
-    async addMember(senderId: string, recipientId: string, groupId: string) {
+
+
+    async addMembers(senderFirstAndLastName: string, newMembers: User[], groupId: string) {
         const db = DB.getInstance();
-        try {
-            const value = await db.addMemberToGroup(recipientId, groupId);
-            this.notificationNamespace.to(groupId).emit('globalNotification', `${senderId} added ${recipientId} to the group!`)
-        } catch (err) {
+        newMembers.forEach((member) => {
+            db.addMemberToGroup(member.id, groupId).then(() => {
+                this.notificationNamespace.to(groupId).emit('globalNotification', `${senderFirstAndLastName} added ${member.firstName} ${member.lastName} to the group!`);
+            }).catch((err) => {
             console.error(err);
             throw new HttpError(err, 404);
-        }
+            })
+        })
     }
 
     // Add users to a channel when they click on the channel

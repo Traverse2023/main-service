@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import {HttpError} from "../utils/http-error.js";
-import pkg from 'agora-token';
+import pkg from 'agora-access-token';
 const { RtcRole, RtcTokenBuilder } = pkg;
 
 function hashIdToInteger(userId: string) {
@@ -29,7 +29,7 @@ const getAgoraToken = async (req: Request, res: Response, next: NextFunction) =>
     console.log(`Creating agora token with config: userId: ${userId}\nappId: ${appId}\nappCertificate: ${appCertificate}
     channelId: ${channelId}\nrole: ${role}\nexpiration: ${expiration}`);
     const userIdInt = hashIdToInteger(userId);
-    const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelId, userIdInt, role, expiration, expiration);
+    const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelId, userIdInt, role, expiration);
     console.log('Agora Token:', token, 'uid' , userIdInt);
     res.json({token: token, uid: userIdInt})
     } catch (err) {
