@@ -21,7 +21,7 @@ const createUniqueUserConstraint = () => {
 }
 
 
-const createUsers = async (): Promise<string[]> => {
+const createUsers = async () => {
     try {
         const plainTextPassword: string = "123";
 
@@ -125,7 +125,6 @@ const createUsers = async (): Promise<string[]> => {
                 }).catch(err => reject(err));
             }),
         ])
-        console.log(`Users created: ${users}`);
         return(users);
     } catch (err) {
         return err;
@@ -134,9 +133,10 @@ const createUsers = async (): Promise<string[]> => {
 
 const addUsersToGroup = async (groupId: string, userIds: string[]) => {
     try {
-        for(const userId in userIds) {
+        console.log('here136', userIds)
+        for (const userId of userIds) {
             await db.addMemberToGroup(userId, groupId);
-            console.log(`User added to group ${groupId}: ${userId}`);
+            console.log(`User ${userId} added to group: ${groupId}`);
         }
     } catch (err) {
         console.log(err);
@@ -153,7 +153,9 @@ const script = async () => {
     try {
         console.log("Running seed-script with default data...");
         await clear();
+
         const usersCreatedIds: string[] = await createUsers();
+        console.log('here157', usersCreatedIds)
         const creatingUser: string = usersCreatedIds.pop();
         const groupName: string = "Traverse Admins";
         const group: Group = await createMainGroup(groupName, creatingUser);

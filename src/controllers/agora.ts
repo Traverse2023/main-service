@@ -17,6 +17,7 @@ function hashIdToInteger(userId: string) {
 }
 
 const getAgoraToken = async (req: Request, res: Response, next: NextFunction) => {
+    console.log("Creating agora token...")
     try {
     const userId: string = req.header("x-user")
     const appId = '056e7ee25ec24b4586f17ec177e121d1';

@@ -46,23 +46,23 @@ app.get("/", (req, res) => {
 //   return Math.abs(hash);
 // }
 
-app.get("/api/agora/getToken/:channelId", (req, res) => {
-  const appId = '056e7ee25ec24b4586f17ec177e121d1';
-  const appCertificate = 'aa92b0a26b154fb191a2fd43003bf854'; // Or null if not using certificate
-  const channelId = req.params.channelId;
-  const userId = req.header("x-user");
-
-  // const role = RtcRole.PUBLISHER; // Role of the user (publisher, subscriber)
-  // const expirationTimeInSeconds = 3600; // 1 hour expiration time
-  // const currentTimestamp = Math.floor(Date.now() / 1000);
-  // const expiration = currentTimestamp + expirationTimeInSeconds;
-  // const userIdInt = hashStringToInteger(userId);
-  // console.log('uidInt', userIdInt);
-  // const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelId, userIdInt, role, expiration, expiration);
-  // console.log('Agora Token:', token, 'uid' , userIdInt);
-  //
-  // res.json({token: token, uid: userIdInt})
-})
+// app.get("/api/agora/getToken/:channelId", (req, res) => {
+//   const appId = '056e7ee25ec24b4586f17ec177e121d1';
+//   const appCertificate = 'aa92b0a26b154fb191a2fd43003bf854'; // Or null if not using certificate
+//   const channelId = req.params.channelId;
+//   const userId = req.header("x-user");
+//
+//   // const role = RtcRole.PUBLISHER; // Role of the user (publisher, subscriber)
+//   // const expirationTimeInSeconds = 3600; // 1 hour expiration time
+//   // const currentTimestamp = Math.floor(Date.now() / 1000);
+//   // const expiration = currentTimestamp + expirationTimeInSeconds;
+//   // const userIdInt = hashStringToInteger(userId);
+//   // console.log('uidInt', userIdInt);
+//   // const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelId, userIdInt, role, expiration, expiration);
+//   // console.log('Agora Token:', token, 'uid' , userIdInt);
+//   //
+//   // res.json({token: token, uid: userIdInt})
+// })
 
 app.use("/api/agora", agoraRoutes)
 app.use("/api/user", userRoutes)

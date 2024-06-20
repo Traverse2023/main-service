@@ -173,6 +173,7 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
+        // TODO: dont return password
         const readQuery = `MATCH p=(s:User)-[:FRIEND_REQUEST]->(u:User) WHERE elementId(u) = $userId
                                    RETURN s`;
 
@@ -194,6 +195,7 @@ class DB {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     return new Promise(async (resolve, reject) => {
       try {
+        // TODO: dont return password
         const readQuery = `MATCH p=(s:User)-[:FRIENDS]-(u:User) WHERE elementId(u) = $userId
         RETURN s`;
         const readResult = await session.executeRead((tx) =>
@@ -216,6 +218,7 @@ class DB {
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
+        // TODO: dont return password
         const readQuery = `MATCH (u:User)
                                 WITH u, u.firstName + ' ' + u.lastName AS fullname
                                 WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) OR toLower(u.lastName) CONTAINS toLower($searched) OR u.username CONTAINS $searched
@@ -269,7 +272,7 @@ class DB {
 
   async getMutualFriends(user1Id: string, user2Id: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
-
+    // TODO: dont return password
     return new Promise(async (resolve, reject) => {
       try {
         const readQuery = `MATCH (u1:User)-[:FRIENDS]-(fof:User), 
