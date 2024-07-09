@@ -1,11 +1,12 @@
-import express, {Router, Request, Response} from 'express'
+// @ts-ignore
+import {Router} from 'express'
 import { savePFP } from '../controllers/user.js'
-import { checkAuth } from '../utils/check-auth.js'
+
+import {getUser} from "../controllers/search.js";
 
 const router = Router()
 
-router.use(checkAuth)
-
-router.post('/savePFP', savePFP)
+router.post('/savePFP', savePFP);
+router.get('/getUser', getUser);
 
 export { router }
