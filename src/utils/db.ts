@@ -515,7 +515,6 @@ class DB {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
-      console.log("joining channel ", userEmail, channelUuid)
       try {
         const writeQuery = `MATCH (u:User) WHERE elementID(u) = $userId
         MATCH (c:Channel {channelUuid: $channelUuid})

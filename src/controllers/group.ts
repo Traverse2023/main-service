@@ -104,7 +104,7 @@ class GroupsController {
     async addUserToChannel(userId: string, groupId: string, channelName: string){
         const db = DB.getInstance();
         try {
-            const value = await db.joinChannel(email, groupId+"#"+channelName);
+            const value = await db.joinChannel(userId, groupId+"#"+channelName);
         } catch (err) {
             console.error(err);
             throw new HttpError(err, 404);
