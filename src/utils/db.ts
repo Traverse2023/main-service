@@ -221,15 +221,13 @@ class DB {
         // TODO: dont return password
         const readQuery = `MATCH (u:User)
                                 WITH u, u.firstName + ' ' + u.lastName AS fullname
-                                WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) OR toLower(u.lastName) CONTAINS toLower($searched) OR u.username CONTAINS $searched
-                                RETURN u, 
-                                MATCH (u1:User) WHERE elementId(u1) = $searchingUserId
-                                EXISTS( u1-[:FRIENDS]-(u) ),
-                                EXISTS( u1-[:FRIEND_REQUEST]-(u) )`;
+                                WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) 
+                                OR toLower(u.lastName) CONTAINS toLower($searched) OR u.username CONTAINS $searched
+                                RETURN {id:elementId(u), email:u.username, firstName:u.firstName, lastName:u.lastName, pfpUrl:u.pfpURL} as user`;
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { searched, searchingUserId})
         );
-        results = readResult.records.map(record => record["_fields"][0].properties);
+        results = readResult.records.map(record => record.get("user"));
         console.log(`Search users executed...`);
         resolve(results);
       } catch (err) {
@@ -247,7 +245,7 @@ class DB {
     return new Promise(async (resolve, reject) => {
       try {
         const readQuery = `MATCH (u1:User)-[r]-(u2:User) 
-        WHERE elementId(u1) = $user1Id AND elementId(u2) = $user2Id
+        WHERE elementId(u1) = $user1Id AND elementId(u2) = $user2Id 
         RETURN type(r) as type, elementId(startNode(r))`;
 
         const readResult = await session.executeRead((tx) =>
