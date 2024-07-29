@@ -39,10 +39,11 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
         });
 
         //join room
-        socket.on("joinRoom", ( groupId: string) => {
+        socket.on("joinRoom", ( groupId: string, channelName: string) => {
             socket.rooms.forEach(room => {if (room !== socket.id) {socket.leave(room);}});
             groupsController.deleteSocket(userId)
-            socket.join(groupId)
+            console.log('here45', groupId, channelName);
+            socket.join(groupId + "#" + channelName)
         })
 
         // Join voice call
@@ -82,7 +83,7 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
 
                 console.log(`Emitting new message to group ${groupId}`)
 
-                groupsNamespace.to(groupId).emit('receiveMessage', response.data);
+                groupsNamespace.to(groupId + "#" + message_info.channelName).emit('receiveMessage', response.data);
                // All members of chat
                 // TODO: Replace with DB call to get all members of chat
                 const groupMembers = message_info.members;
