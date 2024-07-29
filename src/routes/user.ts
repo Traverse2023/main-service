@@ -1,12 +1,12 @@
 // @ts-ignore
 import {Router} from 'express'
-import { savePfp } from '../controllers/user.js'
+import { updatePfp } from '../controllers/user.js'
 
 import {getUser} from "../controllers/search.js";
 
 const router = Router()
 
-router.post('/savePfp', savePfp);
+router.post('/updatePfp', updatePfp);
 router.get('/getUser', getUser);
 
 export { router }
