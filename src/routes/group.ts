@@ -54,7 +54,7 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
             // Add user to new channel
             groupsController.addUserToChannel(userId, groupObj.groupId, channelName)
                 .then(r => console.log(`User ${userId} added to group ${groupObj.groupId}`));
-            groupsNamespace.to(groupObj.groupId).emit('joinCallListener', member, channelName)
+            groupsNamespace.to(groupObj.groupId).emit('joinCallListener', {...member, id: userId}, channelName)
             console.log("after receiveJoinCall emit")
         })
 
@@ -62,7 +62,7 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
         socket.on("disconnectCall", (member, groupObj, channelName) => {
             groupsController.disconnectUserFromChannels(userId);
             console.log(userId, "leftCall", groupObj.groupId, channelName)
-            groupsNamespace.to(groupObj.groupId).emit('disconnectCallListener', member, channelName)
+            groupsNamespace.to(groupObj.groupId).emit('disconnectCallListener', {...member, id: userId}, channelName)
         })
 
         socket.on("sendMessage", async (groupId: string, message_info) => {
