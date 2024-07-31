@@ -70,23 +70,24 @@ class DB {
     }
   }
 
-  async savePfp(userId: string, pfpUrl: string) {
+  async savePfp(userId: string, url: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     return new Promise(async (res, rej) => {
       try {
         const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId
-                                                    SET u.pfpURL = $pfpUrl
-                                                    RETURN u.pfpURL as pfp`;
+                                                    SET u.pfpURL = $url
+                                                    RETURN u.pfpURL as n`;
 
         const writeResult = await session.executeWrite((tx) =>
-            tx.run(writeQuery, {userId, pfpUrl})
+            tx.run(writeQuery, {userId, url})
         );
-
+        let pfpUrl: string;
         writeResult.records.forEach((record) => {
-          const pfpUrl: string = record.get("pfp");
+           pfpUrl = record.get("n");
           console.log(`Saved user pfp to db: ${pfpUrl}`)
-          res(pfpUrl);
+
         });
+        res(pfpUrl);
       } catch (error) {
         console.log(`An error occurred when performing savePFP in db: ${error.message}`)
         rej(error)
