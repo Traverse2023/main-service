@@ -14,8 +14,8 @@ const updatePfp =  async (req: Request, res: Response, next: NextFunction) => {
     const userId: string = req.header("x-user")
     const db = DB.getInstance()
     const uploader = busboy({headers: req.headers});
-    // TODO: get bucket from envs
-    const bucket = "codehive-profile-pics";
+
+    const bucket = process.env.PROFILE_PICS_BUCKET;
     const pfpStream = new stream.PassThrough();
     let contentType = "";
     uploader.on('file', (fieldName: string, fileStream: stream, {filename, encoding, mimeType}) => {

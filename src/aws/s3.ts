@@ -4,8 +4,8 @@ import * as stream from "node:stream";
 
 
 const uploadFileStream = async (bucket: string, key: string, contentType: string, pfpStream ) => {
-    // TODO: get region from envs
-    const s3 = new S3Client({region: "us-east-1"});
+
+    const s3 = new S3Client({region: process.env.AWS_REGION});
                 // Create multi-part upload request. Takes stream
     const upload= new Upload({
         client: s3,
