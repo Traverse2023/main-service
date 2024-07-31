@@ -70,26 +70,31 @@ class DB {
     }
   }
 
-  async savePFP(userId: string, pfpURL: string) {
-    console.log('savePFP', userId, pfpURL)
+  async savePfp(userId: string, url: string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
-    try {
-      const writeQuery = `MERGE (u:User) WHERE elementId(u) = $userId
-                                                    SET u.pfpURL = $pfpURL
-                                                    RETURN u`;
+    return new Promise(async (res, rej) => {
+      try {
+        const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId
+                                                    SET u.pfpURL = $url
+                                                    RETURN u.pfpURL as n`;
 
-      const writeResult = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { userId, pfpURL })
-      );
+        const writeResult = await session.executeWrite((tx) =>
+            tx.run(writeQuery, {userId, url})
+        );
+        let pfpUrl: string;
+        writeResult.records.forEach((record) => {
+           pfpUrl = record.get("n");
+          console.log(`Saved user pfp to db: ${pfpUrl}`)
 
-      writeResult.records.forEach((record) => {
-        const updatedUser = record.get("u");
-      });
-    } catch (error) {
-      console.error(`Something went wrong: ${error}`);
-    } finally {
-      await session.close();
-    }
+        });
+        res(pfpUrl);
+      } catch (error) {
+        console.log(`An error occurred when performing savePFP in db: ${error.message}`)
+        rej(error)
+      } finally {
+        await session.close();
+      }
+    });
   }
 
 
@@ -522,7 +527,6 @@ class DB {
         const writeResult = await session.executeWrite((tx) =>
           tx.run(writeQuery, { userId, channelUuid })
         );
-
       } catch (err) {
         reject(err);
       } finally {
