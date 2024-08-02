@@ -75,8 +75,8 @@ class DB {
     return new Promise(async (res, rej) => {
       try {
         const writeQuery = `MATCH (u:User) WHERE elementId(u) = $userId
-                                                    SET u.pfpURL = $url
-                                                    RETURN u.pfpURL as n`;
+                                                    SET u.pfpUrl = $url
+                                                    RETURN u.pfpUrl as n`;
 
         const writeResult = await session.executeWrite((tx) =>
             tx.run(writeQuery, {userId, url})
@@ -104,7 +104,7 @@ class DB {
       try {
         console.log(`Getting user with id: ${userId} from DB`);
         const readQuery = `MATCH (n:User) WHERE elementId(n) = $userId 
-        RETURN {id:elementId(n), email:n.username, firstName:n.firstName, lastName:n.lastName, pfpUrl:n.pfpURL } AS user`;
+        RETURN {id:elementId(n), email:n.username, firstName:n.firstName, lastName:n.lastName, pfpUrl:n.pfpUrl } AS user`;
 
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { userId })
@@ -228,7 +228,7 @@ class DB {
                                 WITH u, u.firstName + ' ' + u.lastName AS fullname
                                 WHERE toLower(fullname) CONTAINS toLower($searched) OR toLower(u.firstName) CONTAINS toLower($searched) 
                                 OR toLower(u.lastName) CONTAINS toLower($searched) OR u.username CONTAINS $searched
-                                RETURN {id:elementId(u), email:u.username, firstName:u.firstName, lastName:u.lastName, pfpUrl:u.pfpURL} as user`;
+                                RETURN {id:elementId(u), email:u.username, firstName:u.firstName, lastName:u.lastName, pfpUrl:u.pfpUrl} as user`;
         const readResult = await session.executeRead((tx) =>
           tx.run(readQuery, { searched, searchingUserId})
         );
@@ -353,9 +353,13 @@ class DB {
 
         console.log(`Created group ${JSON.stringify(group)}`);
         // Create default channels with new group
-        await this.createChannel("general", group.groupId);
-        await this.createChannel("announcements", group.groupId);
-        await this.createChannel("plans", group.groupId);
+
+        let defaultGroups = ["general", "announcements", "events"]
+
+        defaultGroups.forEach(async (channelName) => {
+          await this.createChannel(group.groupId, channelName);
+        })
+        
         console.log(`Created group: ${JSON.stringify(group)}`);
         resolve(group);
       } catch (error) {
@@ -462,27 +466,26 @@ class DB {
 
 
   // Creates a channel node and links it the parent group
-  // channelUuid is groupId+channelName
-  async createChannel(channelName: string, groupId: string) {
+  // we will also add the groupId to the channel node so that we can query for it directly
+  async createChannel(groupId: string, channelName: string) {
     const session = this.localDriver.session({ database: "neo4j" });
-    let results = [];
-    const channelUuid = groupId + "#" + channelName;
 
     return new Promise(async (resolve, reject) => {
       try {
-        const writeQuery = `MATCH (g:Group {id: $groupId})
-        MERGE (c:Channel {groupId: $groupId, channelUuid: $channelUuid})
+        const writeQuery = `MATCH (g:Group WHERE elementID(g)=$groupId)
+        MERGE (c:Channel {groupId: $groupId, channelName: $channelName})
         MERGE (c)-[:CHANNEL]->(g)
         RETURN g, c`;
 
         const response = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { groupId, channelUuid })
+          tx.run(writeQuery, { groupId, channelName })
         );
+
         const newChannel = response.records.map((record) => record.get("c"))
         console.log(`Created channel: ${newChannel}`);
         resolve(newChannel);
       } catch (error) {
-        console.error(`An error occurred performing createChannel with channel ${channelUuid}: ${error}`);
+        console.error(`An error occurred performing createChannel with channel ${channelName}: ${error}`);
         reject(error);
       } finally {
         await session.close();
@@ -491,18 +494,19 @@ class DB {
   }
 
   // Creates a channel node and links it the parent group
-  async deleteChannel(channelUuid: string, groupId: Integer) {
+  async deleteChannel(groupId: String, channelName: String) {
     const session = this.localDriver.session({ database: "neo4j" });
+
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
-        const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelUuid: $channelUuid})-[:CHANNEL]->(g:Group {id: $groupId}) 
+        const writeQuery = `MATCH (c:Channel {groupId: $groupId, channelName: $channelName})
         DETACH DELETE c`;
 
         const writeResult = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { groupId, channelUuid })
+          tx.run(writeQuery, { groupId, channelName })
         );
-        console.log("DELETED CHANNEL FOR: ", groupId, "<-", channelUuid);
+        console.log("DELETED CHANNEL FOR: ", groupId, "<-", channelName);
       } catch (error) {
         console.error(`Something went wrong: ${error}`);
         reject(error);
@@ -514,18 +518,20 @@ class DB {
   }
 
   // Saves when user joins a channel to neo4j, links user's node to channel when user joins
-  async joinChannel(userId: String, channelUuid: String) {
+  async joinChannel(userId: String, groupId: String, channelName: String) {
     const session = this.localDriver.session({ database: "neo4j" });
     let results = [];
     return new Promise(async (resolve, reject) => {
       try {
+        console.log("Joining channel", userId, groupId, channelName)
+
         const writeQuery = `MATCH (u:User) WHERE elementID(u) = $userId
-        MATCH (c:Channel {channelUuid: $channelUuid})
+        MATCH (c:Channel {channelName: $channelName, groupId: $groupId})
         MERGE (u)-[r:CHANNELMEMBER]->(c)
         RETURN u, c`;
 
         const writeResult = await session.executeWrite((tx) =>
-          tx.run(writeQuery, { userId, channelUuid })
+          tx.run(writeQuery, { userId, groupId, channelName })
         );
       } catch (err) {
         reject(err);
@@ -554,6 +560,36 @@ class DB {
 
       } catch (err) {
         console.log("leaveAllChannels FAILED", userId);
+        reject(err);
+      } finally {
+        await session.close();
+        resolve(results);
+      }
+    })
+  }
+
+  async getUsersInVoiceChannel(groupId: String, channelName: String,) {
+    const session = this.localDriver.session({ database: "neo4j" });
+    let results = [];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const writeQuery = `MATCH (u:User)-[:CHANNELMEMBER]->(c:Channel {channelName: $channelName, groupId: $groupId})
+        return {
+          id:elementId(u),
+          email:u.username, 
+          firstName:u.firstName, 
+          lastName:u.lastName, 
+          pfpUrl:u.pfpUrl
+        } as user`;
+
+        const readResult = await session.executeWrite((tx) =>
+        tx.run(writeQuery, { groupId, channelName })
+        );
+        results = readResult.records.map(record => record.get('user'));
+        console.log("Found users in channel", results)
+
+      } catch (err) {
+        console.log("getUsersInVoiceChannel FAILED", channelName);
         reject(err);
       } finally {
         await session.close();

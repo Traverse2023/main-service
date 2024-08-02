@@ -1,6 +1,12 @@
 // @ts-ignore
 import {Router} from "express"
-import {createGroup, getFriendsWhoAreNotMembers, getGroups, getMembers, GroupsController} from '../controllers/group.js'
+import {createGroup, 
+    getFriendsWhoAreNotMembers, 
+    getGroups, 
+    getMembers, 
+    GroupsController,
+    getUsersInVoiceChannel
+} from '../controllers/group.js'
 import StorageService from '../utils/storage-service.js';
 // @ts-ignore
 import {Namespace, Socket} from "socket.io";
@@ -16,6 +22,8 @@ router.post('/createGroup', createGroup);
 router.get('/getMembers/:groupId', getMembers);
 
 router.get('/getFriendsWhoAreNotMembers/:groupId', getFriendsWhoAreNotMembers);
+
+router.get('/getUsersInVoiceChannel/:groupId/:channelName', getUsersInVoiceChannel)
 
 const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespace) => {
 // Define websockets

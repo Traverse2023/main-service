@@ -65,6 +65,19 @@ const getFriendsWhoAreNotMembers = (req: Request, res: Response, next: NextFunct
         });
 }
 
+const getUsersInVoiceChannel = async (req: Request, res: Response, next: NextFunction) => {
+    const { groupId, channelName } = req.params;
+    
+    const db = DB.getInstance();
+    db.getUsersInVoiceChannel(groupId, channelName)
+        .then((value) => {
+            res.json(value);
+        })
+        .catch((err) => {
+            throw new HttpError(err, 400);
+        });
+}
+
 // Responsible for handling methods to do with sockets
 class GroupsController {
 
@@ -104,7 +117,7 @@ class GroupsController {
     async addUserToChannel(userId: string, groupId: string, channelName: string){
         const db = DB.getInstance();
         try {
-            const value = await db.joinChannel(userId, groupId+"#"+channelName);
+            const value = await db.joinChannel(userId, groupId, channelName);
         } catch (err) {
             console.error(err);
             throw new HttpError(err, 404);
@@ -127,4 +140,4 @@ class GroupsController {
     }
 }
 
-export {createGroup, getGroups, getMembers, getFriendsWhoAreNotMembers, GroupsController}
+export {createGroup, getGroups, getMembers, getFriendsWhoAreNotMembers, getUsersInVoiceChannel, GroupsController}
