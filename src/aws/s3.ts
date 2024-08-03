@@ -5,7 +5,10 @@ import * as stream from "node:stream";
 
 const uploadFileStream = async (bucket: string, key: string, contentType: string, pfpStream ) => {
 
-    const s3 = new S3Client({region: process.env.AWS_REGION});
+    const s3 = new S3Client({
+        region: process.env.AWS_REGION,
+        endpoint: process.env.S3_ENDPOINT,
+    });
                 // Create multi-part upload request. Takes stream
     const upload= new Upload({
         client: s3,
@@ -19,7 +22,7 @@ const uploadFileStream = async (bucket: string, key: string, contentType: string
     // Wait for upload to completely finish
     await upload.done();
     // Return s3 url of uploaded file
-    let pfpUrl: string = `https://${bucket}.s3.amazonaws.com/${key}`;
+    let pfpUrl: string = process.env.S3_ENDPOINT ? `http://${bucket}.${process.env.S3_ENDPOINT}/${key}` : `https://${bucket}.s3.amazon.com/${key}`;
     return pfpUrl;
 }
 
