@@ -126,6 +126,7 @@ class GroupsController {
 
     // Disconnect user from all channels
     async disconnectUserFromChannels(userId: string) {
+        console.log("Disconnecting from all channels")
         const db = DB.getInstance();
         try {
             const value = await db.leaveAllChannels(userId);

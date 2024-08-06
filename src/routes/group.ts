@@ -58,10 +58,10 @@ const groupsRouter = (groupsNamespace: Namespace, notificationNamespace: Namespa
         socket.on("joinCall", ( member, groupObj, channelName ) => {
             // Disconnect from any existing channels, if any.
             groupsController.disconnectUserFromChannels(userId);
-
+            console.log("Joining call", userId, groupObj.groupId, channelName)
             // Add user to new channel
             groupsController.addUserToChannel(userId, groupObj.groupId, channelName)
-                .then(r => console.log(`User ${userId} added to group ${groupObj.groupId}`));
+                .then(r => console.log(`User ${userId} added to channel ${groupObj.groupId}`));
             groupsNamespace.to(groupObj.groupId).emit('joinCallListener', {...member, id: userId}, channelName)
             console.log("after receiveJoinCall emit")
         })
