@@ -15,7 +15,7 @@ const clear = () => {
 
 const createUniqueUserConstraint = () => {
     return new Promise((resolve, reject) => {
-        db.createUserUnique().then(response => resolve(response)).catch(err => reject(err))
+        db.addUserUniqueConstraint().then(response => resolve(response)).catch(err => reject(err))
     })
 }
 

@@ -53,7 +53,7 @@ class DB {
     }
   }
 
-  async createUserUnique() {
+  async addUserUniqueConstraint() {
     const session : Session = this.localDriver.session({ database: "neo4j" });
     try {
       const writeQuery = `CREATE CONSTRAINT FOR (u:User) REQUIRE u.email IS UNIQUE`;
@@ -62,10 +62,6 @@ class DB {
         tx.run(writeQuery)
       );
 
-      // writeResult.records.forEach((record) => {
-      //   const createdUser = record.get("u");
-      //   console.info("CREATED USER: ", firstName);
-      // });
     } catch (error) {
       console.error(`Something went wrong: ${error}`);
     } finally {
@@ -104,6 +100,8 @@ class DB {
                                                  lastName: $lastName,
                                                  email: $email,
                                                  password: $password,
+                                                 pfpURL: $pfpURL,
+                                                 status: $status});
                                                  pfpURL: $pfpURL,
                                                  status: $status})`;
 
@@ -149,7 +147,7 @@ class DB {
 
   async createFriendRequest(user1Email : string, user2Email : string) {
     const session : Session = this.localDriver.session({ database: "neo4j" });
-
+ 
     return new Promise(async (resolve, reject) => {
       try {
         const writeQuery = `MATCH (u1:User {email: $user1Email}),
