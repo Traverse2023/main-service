@@ -1,16 +1,17 @@
+// @ts-ignore
 import {Namespace, Socket} from "socket.io";
-import {checkAuth} from "../utils/check-auth.js";
+// @ts-ignore
 import {Router} from "express";
 import {NotificationsController} from "../controllers/notifications.js";
 
 const router = Router()
-router.use(checkAuth)
+
 const notificationsRouter = (notificationNamespace: Namespace, io) => {
     const notificationsController: NotificationsController = NotificationsController.getInstance(io);
 
     notificationNamespace.on('connection', (socket: Socket) => {
         console.log("Notifications connection")
-        const id: string = socket.handshake.query.email as string;
+        const id: string = socket.handshake.query.userId as string;
         notificationsController.registerSocket(id, socket);
 
         socket.on('joinRoom', (chatId: string) => {
