@@ -124,6 +124,33 @@ const createUsers = async () => {
                     resolve(user.id);
                 }).catch(err => reject(err));
             }),
+
+	        new Promise<string>((resolve, reject) => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "zmyantro@gmail.com",
+                    firstName: "Anthony",
+                    lastName: "Zinsmeyer",
+                    password: plainTextPassword,
+                }).then(user => {
+                    console.log(`Created user: ${JSON.stringify(user)}`)
+                    resolve(user.id);
+                }).catch(err => reject(err));
+            }),
+
+            new Promise<string>((resolve, reject) => {
+                authService.createUser({
+                    pfpUrl: "",
+                    username: "anmol@traverse.zone",
+                    firstName: "Anmol",
+                    lastName: "Singh",
+                    password: plainTextPassword,
+                }).then(user => {
+                    console.log(`Created user: ${JSON.stringify(user)}`)
+                    resolve(user.id);
+                }).catch(err => reject(err));
+            }),
+
         ])
         return(users);
     } catch (err) {
